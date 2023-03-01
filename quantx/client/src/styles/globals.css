@@ -1,0 +1,46 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+:root {
+  --bg:      #050608;
+  --sidebar: #08090c;
+  --panel:   #0c0e12;
+  --card:    #111318;
+  --border:  rgba(255,255,255,0.06);
+  --accent:  #00e676;
+  --red:     #ff5252;
+  --blue:    #448aff;
+  --purple:  #b388ff;
+  --yellow:  #ffd740;
+  --text:    #dde5f0;
+  --sub:     #546070;
+  --muted:   #252d3a;
+  --green:   #00c853;
+}
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html, body, #root { height: 100%; width: 100%; overflow: hidden; }
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+
+body::before {
+  content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background:
+    radial-gradient(ellipse 60% 40% at 80% 10%, rgba(0,230,118,0.04) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 50% at 10% 90%, rgba(68,138,255,0.04) 0%, transparent 60%);
+}
+body::after {
+  content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background-image: linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+::-webkit-scrollbar { width: 3px; height: 3px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,.08); border-radius: 2px; }
+
+select, input, button { font-family: 'Inter', sans-serif; }

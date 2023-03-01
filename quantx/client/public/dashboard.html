@@ -1,0 +1,1919 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>QuantX · India AI Trading</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
+<style>
+/* ─── Design Tokens ─────────────────────────────────────────────────────── */
+:root {
+  --bg:        #04060a;
+  --sidebar:   #070a0f;
+  --panel:     #0a0d14;
+  --card:      #0f1219;
+  --card2:     #131720;
+  --border:    rgba(255,255,255,0.07);
+  --border2:   rgba(255,255,255,0.04);
+  --accent:    #00e676;
+  --accent2:   #00c853;
+  --red:       #ff5252;
+  --blue:      #448aff;
+  --yellow:    #ffd740;
+  --purple:    #b388ff;
+  --text:      #dde5f0;
+  --sub:       #4a5568;
+  --muted:     #1e2535;
+  --green:     #00c853;
+  --font:      'Space Grotesk', sans-serif;
+  --mono:      'JetBrains Mono', monospace;
+  --display:   'Syne', sans-serif;
+  --sidebar-w: 220px;
+  --rail-w:    272px;
+  --topbar-h:  60px;
+  --tabnav-h:  40px;
+  --radius:    10px;
+  --trans:     all 0.15s ease;
+}
+
+/* ─── Reset & Base ──────────────────────────────────────────────────────── */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { height: 100%; width: 100%; overflow: hidden; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  font-size: 13px;
+}
+
+/* Atmospheric background */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  pointer-events: none; z-index: 0;
+  background:
+    radial-gradient(ellipse 70% 50% at 85% 5%, rgba(0,230,118,0.05) 0%, transparent 55%),
+    radial-gradient(ellipse 50% 60% at 5% 95%, rgba(68,138,255,0.04) 0%, transparent 55%),
+    radial-gradient(ellipse 40% 40% at 50% 50%, rgba(179,136,255,0.02) 0%, transparent 60%);
+}
+body::after {
+  content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.012) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.012) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* ─── Scrollbar ─────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 3px; height: 3px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,.07); border-radius: 99px; }
+
+/* ─── Animations ────────────────────────────────────────────────────────── */
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+@keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+@keyframes ticker { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
+@keyframes flash-green { 0%,100%{color:inherit} 30%{color:var(--accent)} }
+@keyframes flash-red   { 0%,100%{color:inherit} 30%{color:var(--red)} }
+@keyframes spin { to{transform:rotate(360deg)} }
+
+/* ─── Shell Layout ──────────────────────────────────────────────────────── */
+#root {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  position: relative;
+  z-index: 1;
+}
+
+/* ─── Sidebar ───────────────────────────────────────────────────────────── */
+.sidebar {
+  width: var(--sidebar-w);
+  flex-shrink: 0;
+  background: var(--sidebar);
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  overflow-x: hidden;
+  transition: width 0.25s ease, transform 0.25s ease;
+  z-index: 100;
+}
+
+.sidebar-logo {
+  padding: 18px 16px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.sidebar-logo-icon {
+  width: 32px; height: 32px;
+  background: var(--accent);
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--display);
+  font-size: 16px; font-weight: 800;
+  color: #000;
+  flex-shrink: 0;
+  box-shadow: 0 0 16px rgba(0,230,118,0.35);
+}
+.sidebar-logo-text { font-family: var(--display); font-size: 15px; font-weight: 800; color: var(--text); letter-spacing: -0.5px; }
+.sidebar-logo-sub  { font-size: 9px; color: var(--sub); font-weight: 500; margin-top: 1px; letter-spacing: 0.3px; }
+
+.sidebar-search {
+  margin: 12px 12px 4px;
+  display: flex; align-items: center; gap: 8px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 7px 11px;
+  transition: var(--trans);
+}
+.sidebar-search:focus-within { border-color: rgba(0,230,118,0.3); }
+.sidebar-search input {
+  background: none; border: none;
+  color: var(--text); font-family: var(--font);
+  font-size: 12px; flex: 1; outline: none;
+}
+.sidebar-search input::placeholder { color: var(--sub); }
+
+.sec-label {
+  font-size: 9px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 1.2px;
+  color: var(--sub); margin-bottom: 6px;
+  padding: 0 4px;
+}
+
+.nav-section { padding: 16px 12px 6px; }
+
+.nav-item {
+  display: flex; align-items: center; gap: 9px;
+  padding: 8px 10px; border-radius: 8px; cursor: pointer;
+  font-size: 12.5px; font-weight: 500;
+  color: var(--sub);
+  background: transparent;
+  border: 1px solid transparent;
+  transition: var(--trans);
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.nav-item:hover { color: var(--text); background: rgba(255,255,255,0.03); }
+.nav-item.active {
+  color: var(--accent);
+  background: rgba(0,200,83,.09);
+  border-color: rgba(0,200,83,.2);
+}
+.nav-icon { font-size: 14px; flex-shrink: 0; width: 16px; text-align: center; }
+.nav-label { flex: 1; }
+.nav-badge {
+  border-radius: 6px; font-size: 7.5px; font-weight: 700; padding: 1px 5px;
+  letter-spacing: 0.3px;
+}
+.nav-badge.live { background: rgba(255,82,82,.15); color: var(--red); }
+.nav-badge.new  { background: var(--accent); color: #000; }
+.nav-count { background: var(--card); border: 1px solid var(--border); border-radius: 6px; font-size: 9px; padding: 0 5px; color: var(--text); font-family: var(--mono); }
+
+/* Indices tiles */
+.indices-section { margin-top: auto; padding: 12px; border-top: 1px solid var(--border); flex-shrink: 0; }
+.index-tile {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: var(--trans);
+}
+.index-tile:hover { border-color: rgba(255,255,255,0.12); }
+.index-tile:last-child { margin-bottom: 0; }
+.index-sym { font-size: 8.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--sub); }
+.index-val { font-family: var(--mono); font-size: 14px; font-weight: 600; margin-top: 2px; }
+.index-chg { font-size: 10px; font-family: var(--mono); margin-top: 1px; }
+
+/* ─── Main Area ─────────────────────────────────────────────────────────── */
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
+}
+
+/* ─── TopBar ────────────────────────────────────────────────────────────── */
+.topbar {
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+  padding: 0 20px;
+  height: var(--topbar-h);
+  display: flex;
+  align-items: center;
+  gap: 0;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+.topbar-stat {
+  padding-right: 20px;
+  border-right: 1px solid var(--border);
+  margin-right: 20px;
+  flex-shrink: 0;
+}
+.topbar-stat:last-of-type { border-right: none; margin-right: 0; }
+.topbar-stat-label { font-size: 9.5px; color: var(--sub); font-weight: 500; margin-bottom: 2px; letter-spacing: 0.3px; }
+.topbar-stat-value { font-family: var(--mono); font-size: 18px; font-weight: 600; letter-spacing: -0.5px; line-height: 1; }
+.pos { color: var(--accent); }
+.neg { color: var(--red); }
+
+.topbar-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+.live-badge {
+  display: flex; align-items: center; gap: 5px;
+  background: rgba(0,200,83,.08); border: 1px solid rgba(0,200,83,.2);
+  border-radius: 20px; padding: 4px 11px;
+  font-size: 9.5px; color: var(--accent); font-weight: 600; letter-spacing: 0.3px;
+}
+.live-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); animation: pulse 2s infinite; }
+.clock { font-family: var(--mono); font-size: 10.5px; color: var(--sub); }
+
+/* Hamburger */
+.hamburger {
+  display: none;
+  background: none; border: none; cursor: pointer;
+  flex-direction: column; gap: 4px; padding: 4px; margin-right: 12px;
+}
+.hamburger span {
+  display: block; width: 20px; height: 1.5px;
+  background: var(--sub); border-radius: 2px;
+  transition: var(--trans);
+}
+
+/* ─── TabNav ────────────────────────────────────────────────────────────── */
+.tabnav {
+  display: flex; align-items: center; gap: 2px;
+  padding: 0 20px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+  height: var(--tabnav-h);
+  flex-shrink: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+.tabnav::-webkit-scrollbar { height: 0; }
+.tab-item {
+  padding: 5px 13px; border-radius: 7px;
+  font-size: 12px; font-weight: 500; cursor: pointer;
+  color: var(--sub);
+  background: transparent;
+  border: 1px solid transparent;
+  transition: var(--trans);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.tab-item:hover { color: var(--text); background: rgba(255,255,255,0.03); }
+.tab-item.active {
+  color: var(--accent);
+  background: rgba(0,200,83,.09);
+  border-color: rgba(0,200,83,.2);
+}
+
+/* ─── Page Content ──────────────────────────────────────────────────────── */
+.page-content {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ─── Right Rail ────────────────────────────────────────────────────────── */
+.right-rail {
+  width: var(--rail-w);
+  flex-shrink: 0;
+  background: var(--sidebar);
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: width 0.25s ease, transform 0.25s ease;
+}
+
+.rail-section { padding: 14px 15px; border-bottom: 1px solid var(--border); }
+.rail-section-title {
+  font-size: 8.5px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.9px;
+  color: var(--sub); margin-bottom: 10px;
+  display: flex; align-items: center; gap: 6px;
+}
+
+/* Watchlist row */
+.watch-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 6px; border-radius: 7px; cursor: pointer;
+  margin-bottom: 1px;
+  border: 1px solid transparent;
+  transition: var(--trans);
+}
+.watch-row:hover { background: var(--card); }
+.watch-sym  { font-family: var(--mono); font-size: 10px; font-weight: 700; color: var(--text); }
+.watch-name { font-size: 9px; color: var(--sub); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 110px; }
+.watch-price { font-family: var(--mono); font-size: 11px; font-weight: 600; }
+.watch-pct  { font-size: 8.5px; font-family: var(--mono); padding: 1px 4px; border-radius: 3px; margin-top: 2px; display: inline-block; }
+
+/* Kite status */
+.kite-status-pill {
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(0,200,83,.05); border: 1px solid rgba(0,200,83,.15);
+  border-radius: 8px; padding: 8px 11px; margin-bottom: 8px;
+}
+.kite-field {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 6px;
+}
+.kite-field label { font-size: 9.5px; color: var(--sub); width: 80px; flex-shrink: 0; }
+.kite-field input {
+  flex: 1; background: var(--card); border: 1px solid var(--border);
+  border-radius: 6px; padding: 4px 8px;
+  color: var(--text); font-family: var(--mono); font-size: 10px; outline: none;
+}
+
+/* News row */
+.news-row { padding: 10px 0; border-bottom: 1px solid var(--border2); }
+.news-row:last-child { border-bottom: none; }
+.news-meta { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+.news-source {
+  font-size: 7.5px; font-weight: 700;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 3px; padding: 1px 5px; color: var(--sub);
+  letter-spacing: 0.3px;
+}
+.news-ago { font-size: 7.5px; color: var(--muted); margin-left: auto; }
+.news-title { font-size: 10.5px; color: var(--text); line-height: 1.45; cursor: pointer; }
+.news-title:hover { color: var(--accent); }
+.news-sentiment {
+  display: inline-block; font-size: 7.5px; font-weight: 700;
+  margin-top: 4px; padding: 1px 5px; border-radius: 3px;
+  letter-spacing: 0.3px;
+}
+
+/* ─── Pages ─────────────────────────────────────────────────────────────── */
+.page { flex: 1; overflow-y: auto; display: flex; flex-direction: column; background: var(--bg); }
+.page-header {
+  background: var(--panel); border-bottom: 1px solid var(--border);
+  padding: 18px 22px 16px; flex-shrink: 0;
+  animation: fadeUp 0.3s ease;
+}
+.page-hero { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
+.page-title-sub { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--sub); margin-bottom: 4px; }
+.page-value { font-family: var(--mono); font-size: 30px; font-weight: 700; letter-spacing: -1px; line-height: 1; }
+.page-change { font-family: var(--mono); font-size: 13px; margin-top: 4px; }
+
+/* Time pills */
+.time-pills { display: flex; gap: 4px; }
+.time-pill {
+  padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 500; cursor: pointer;
+  color: var(--sub); background: var(--card); border: 1px solid var(--border);
+  transition: var(--trans);
+}
+.time-pill:hover { color: var(--text); border-color: var(--border); }
+.time-pill.active { color: var(--accent); background: rgba(0,200,83,.10); border-color: rgba(0,200,83,.25); }
+
+/* Chart canvas */
+.chart-container { height: 150px; position: relative; padding: 0 2px; }
+
+/* Holdings table */
+.section-body { padding: 18px 22px; flex: 1; }
+.section-heading { font-size: 13px; font-weight: 600; margin-bottom: 14px; }
+
+table { width: 100%; border-collapse: collapse; }
+th {
+  text-align: left; font-size: 9px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.6px;
+  color: var(--sub); padding: 0 0 10px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+th.r { text-align: right; }
+td {
+  padding: 11px 0; border-bottom: 1px solid var(--border2);
+  vertical-align: middle;
+  font-family: var(--mono); font-size: 12px;
+  color: var(--text);
+}
+td.r { text-align: right; }
+td.sym-cell .sym { font-size: 12px; font-weight: 700; }
+td.sym-cell .name { font-size: 9.5px; color: var(--sub); margin-top: 1px; font-family: var(--font); }
+
+.btn-sell {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 5px; padding: 3px 10px;
+  font-size: 9.5px; font-weight: 600; color: var(--sub);
+  cursor: pointer; transition: var(--trans); font-family: var(--font);
+}
+.btn-sell:hover { border-color: var(--red); color: var(--red); }
+
+/* ─── Paper Trade ───────────────────────────────────────────────────────── */
+.stats-grid-5 {
+  display: grid; grid-template-columns: repeat(5, 1fr);
+}
+.stat-block {
+  padding: 12px 16px 12px 0;
+  border-right: 1px solid var(--border);
+}
+.stat-block:last-child { border-right: none; padding-right: 0; }
+.stat-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--sub); margin-bottom: 4px; }
+.stat-value { font-family: var(--mono); font-size: 17px; font-weight: 600; }
+
+.card {
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 18px;
+}
+.card-title { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--sub); margin-bottom: 14px; }
+
+.form-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 12px; }
+.form-grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 12px; align-items: flex-end; }
+.form-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--sub); margin-bottom: 5px; display: block; }
+.form-input {
+  background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+  padding: 8px 10px; color: var(--text); font-family: var(--mono); font-size: 12.5px;
+  outline: none; width: 100%; transition: border-color 0.15s;
+}
+.form-input:focus { border-color: rgba(0,200,83,0.45); }
+.form-input::placeholder { color: var(--sub); }
+select.form-input { cursor: pointer; appearance: none; }
+
+.btn-buy, .btn-sell-main {
+  padding: 9px 20px; border-radius: 8px; border: none;
+  font-size: 12.5px; font-weight: 600; cursor: pointer;
+  transition: var(--trans); font-family: var(--font); white-space: nowrap;
+  letter-spacing: 0.2px;
+}
+.btn-buy       { background: linear-gradient(135deg,#007a33,var(--accent)); color: #000; box-shadow: 0 4px 16px rgba(0,200,83,.25); }
+.btn-sell-main { background: linear-gradient(135deg,#b71c1c,var(--red));   color: #fff; box-shadow: 0 4px 16px rgba(255,82,82,.25); }
+.btn-pair { display: flex; gap: 8px; }
+
+/* ─── Order Book ────────────────────────────────────────────────────────── */
+.orderbook-header { background: var(--panel); border-bottom: 1px solid var(--border); padding: 16px 22px 12px; flex-shrink: 0; }
+.ob-symbol-row { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 14px; }
+.ob-sym { font-family: var(--mono); font-size: 22px; font-weight: 700; }
+.ob-exch { font-size: 8.5px; font-weight: 700; background: var(--card); border: 1px solid var(--border); border-radius: 4px; padding: 2px 7px; color: var(--sub); letter-spacing: 0.4px; }
+.ob-live { display: flex; align-items: center; gap: 4px; font-size: 8.5px; font-weight: 600; color: var(--accent); }
+.ob-name { font-size: 11px; color: var(--sub); margin-top: 2px; }
+.ob-ltp { font-family: var(--mono); font-size: 28px; font-weight: 700; letter-spacing: -0.8px; line-height: 1; }
+.ob-change { font-family: var(--mono); font-size: 12.5px; margin-top: 3px; }
+.ob-prev { font-size: 10px; color: var(--sub); margin-top: 2px; font-family: var(--mono); }
+
+.symbol-pills { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; }
+.symbol-pills::-webkit-scrollbar { height: 0; }
+.sym-pill {
+  padding: 4px 11px; border-radius: 7px; font-family: var(--mono); font-size: 10.5px;
+  font-weight: 600; cursor: pointer; border: 1px solid var(--border);
+  background: var(--card); color: var(--sub); white-space: nowrap; transition: var(--trans);
+}
+.sym-pill:hover { color: var(--text); border-color: rgba(255,255,255,0.12); }
+.sym-pill.active { color: var(--accent); background: rgba(0,200,83,.09); border-color: rgba(0,200,83,.3); }
+
+.ob-body { flex: 1; display: grid; grid-template-columns: 1fr 1fr 290px; overflow: hidden; min-height: 0; }
+.ob-col { display: flex; flex-direction: column; overflow: hidden; border-right: 1px solid var(--border); }
+.ob-col:last-child { border-right: none; overflow-y: auto; }
+
+.ob-col-head {
+  display: grid; grid-template-columns: 1fr 1fr 1fr;
+  padding: 7px 12px; border-bottom: 1px solid var(--border);
+  background: var(--panel); flex-shrink: 0;
+}
+.ob-col-head span { font-size: 8.5px; font-weight: 700; color: var(--sub); text-transform: uppercase; letter-spacing: 0.6px; }
+
+.ob-section-label {
+  padding: 7px 12px 5px; flex-shrink: 0;
+}
+.ob-section-bid { background: rgba(0,200,83,.04); border-bottom: 1px solid rgba(0,200,83,.08); }
+.ob-section-ask { background: rgba(255,82,82,.04); border-bottom: 1px solid rgba(255,82,82,.08); }
+.ob-section-label span { font-size: 9.5px; font-weight: 700; letter-spacing: 0.3px; }
+
+.ob-rows { flex: 1; overflow-y: auto; }
+.ob-row {
+  display: grid; grid-template-columns: 1fr 1fr 1fr;
+  align-items: center; padding: 5px 12px; cursor: pointer;
+  position: relative; border-bottom: 1px solid rgba(255,255,255,0.025);
+  transition: background 0.1s;
+}
+.ob-row:hover { background: rgba(255,255,255,.025); }
+.ob-depth-bar { position: absolute; top: 0; bottom: 0; pointer-events: none; }
+.ob-row span { font-family: var(--mono); font-size: 11.5px; position: relative; }
+
+.ob-total {
+  padding: 9px 12px; border-top: 1px solid var(--border);
+  background: var(--panel); display: flex; justify-content: space-between; align-items: center;
+  flex-shrink: 0;
+}
+.ob-total-label { font-size: 8.5px; font-weight: 700; color: var(--sub); text-transform: uppercase; letter-spacing: 0.5px; }
+.ob-total-val { font-family: var(--mono); font-size: 13px; font-weight: 700; }
+
+/* Right col cards */
+.ob-right { display: flex; flex-direction: column; gap: 12px; padding: 14px; }
+.stat-card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+.stat-card-title { font-size: 8.5px; font-weight: 700; color: var(--sub); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 8px; }
+.stat-tile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.stat-tile { padding: 9px 11px; background: var(--card); border-radius: 8px; border: 1px solid var(--border); }
+.stat-tile-label { font-size: 8.5px; font-weight: 700; color: var(--sub); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; }
+.stat-tile-value { font-family: var(--mono); font-size: 13px; font-weight: 600; }
+.stat-tile-sub { font-size: 8px; color: var(--muted); margin-top: 1px; font-family: var(--mono); }
+
+/* Imbalance bar */
+.imbalance-bar { display: flex; height: 8px; border-radius: 4px; overflow: hidden; margin-bottom: 6px; }
+.imbalance-hint { margin-top: 8px; padding: 5px 9px; border-radius: 6px; font-size: 9.5px; font-weight: 600; }
+
+/* Quick order form */
+.qo-toggle { display: flex; }
+.qo-toggle button {
+  flex: 1; padding: 9px; border: none; cursor: pointer;
+  font-size: 11.5px; font-weight: 700; letter-spacing: 0.4px;
+  transition: var(--trans); font-family: var(--font);
+  border-bottom: 2px solid transparent;
+}
+.qo-body { padding: 12px 12px 10px; display: flex; flex-direction: column; gap: 9px; }
+.qo-type { display: flex; gap: 5px; }
+.qo-type button {
+  flex: 1; padding: 4px 7px; border-radius: 5px;
+  font-size: 9.5px; font-weight: 600; cursor: pointer;
+  transition: var(--trans); font-family: var(--font);
+  border: 1px solid var(--border); background: transparent; color: var(--sub);
+}
+.qo-total { display: flex; justify-content: space-between; padding: 5px 0; border-top: 1px solid var(--border); }
+.qo-total-label { font-size: 9.5px; color: var(--sub); }
+.qo-total-val { font-family: var(--mono); font-size: 11px; font-weight: 600; }
+.qo-submit {
+  padding: 9px; border-radius: 7px; border: none; cursor: pointer;
+  font-size: 12.5px; font-weight: 700; letter-spacing: 0.3px;
+  transition: all 0.2s; font-family: var(--font); width: 100%;
+}
+.qo-disclaimer { font-size: 8.5px; color: var(--muted); text-align: center; line-height: 1.4; }
+
+/* ─── Watchlist Page ────────────────────────────────────────────────────── */
+.add-bar {
+  background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 14px 18px;
+  display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap;
+  margin-top: 14px;
+}
+.add-bar-field { display: flex; flex-direction: column; gap: 4px; }
+.mock-badge {
+  background: rgba(255,215,64,.06); border-bottom: 1px solid rgba(255,215,64,.15);
+  padding: 9px 22px; display: flex; align-items: center; gap: 10px;
+  font-size: 11px; color: var(--yellow);
+}
+
+/* ─── News Page ─────────────────────────────────────────────────────────── */
+.news-filters { display: flex; gap: 6px; flex-wrap: wrap; }
+.filter-chip {
+  padding: 4px 11px; border-radius: 20px; font-size: 11px; font-weight: 500;
+  cursor: pointer; border: 1px solid var(--border); background: var(--card);
+  color: var(--sub); transition: var(--trans);
+}
+.filter-chip:hover { color: var(--text); }
+.filter-chip.active { background: rgba(0,200,83,.09); border-color: rgba(0,200,83,.25); color: var(--accent); }
+
+.sentiment-overview { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px; }
+.sentiment-card { border-radius: 8px; padding: 10px 14px; text-align: center; }
+.sentiment-num { font-family: var(--mono); font-size: 22px; font-weight: 700; }
+.sentiment-lbl { font-size: 10px; color: var(--sub); margin-top: 2px; }
+
+.news-grid { display: flex; flex-direction: column; gap: 0; }
+.news-card {
+  padding: 14px 0; border-bottom: 1px solid var(--border2);
+  display: flex; gap: 14px; align-items: flex-start;
+  cursor: pointer; transition: var(--trans);
+}
+.news-card:hover .news-card-title { color: var(--accent); }
+.news-card-body { flex: 1; }
+.news-card-meta { display: flex; align-items: center; gap: 6px; margin-bottom: 5px; }
+.news-card-source {
+  font-size: 7.5px; font-weight: 700;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 3px; padding: 1px 5px; color: var(--sub);
+}
+.news-card-time { font-size: 8px; color: var(--muted); }
+.news-card-title { font-size: 13px; font-weight: 500; line-height: 1.45; color: var(--text); transition: color 0.15s; }
+.news-card-symbols { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 6px; }
+.news-chip { font-size: 8px; font-weight: 700; font-family: var(--mono); background: var(--card); border: 1px solid var(--border); border-radius: 3px; padding: 1px 5px; color: var(--sub); }
+.news-card-sentiment-bar { width: 4px; flex-shrink: 0; border-radius: 2px; margin-top: 2px; align-self: stretch; min-height: 48px; }
+
+/* ─── Responsive ────────────────────────────────────────────────────────── */
+@media (max-width: 1200px) {
+  :root { --rail-w: 240px; }
+  .ob-body { grid-template-columns: 1fr 1fr 260px; }
+}
+
+@media (max-width: 1024px) {
+  .right-rail { display: none; }
+  .stats-grid-5 { grid-template-columns: repeat(3, 1fr); }
+  .ob-body { grid-template-columns: 1fr 1fr; }
+  .ob-col:last-child { display: none; }
+  .form-grid-3 { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 768px) {
+  :root { --sidebar-w: 0px; --topbar-h: 54px; }
+  .sidebar { position: fixed; left: 0; top: 0; height: 100vh; width: 240px; transform: translateX(-100%); z-index: 200; box-shadow: 4px 0 24px rgba(0,0,0,0.5); }
+  .sidebar.open { transform: translateX(0); width: 240px; }
+  .hamburger { display: flex; }
+  .topbar { padding: 0 14px; }
+  .topbar-stat:nth-child(n+2) { display: none; }
+  .tabnav { padding: 0 12px; }
+  .page-header { padding: 14px 14px 12px; }
+  .section-body { padding: 14px; }
+  .page-value { font-size: 24px; }
+  .stats-grid-5 { grid-template-columns: 1fr 1fr; }
+  .form-grid-3 { grid-template-columns: 1fr; }
+  .form-grid-4 { grid-template-columns: 1fr 1fr; }
+  .ob-body { grid-template-columns: 1fr; }
+  .ob-col:last-child { display: none; }
+  #col-asks { display: none; }
+  .ob-header { padding: 12px 14px; }
+  .time-pills { display: none; }
+  .news-card-title { font-size: 12px; }
+  .sentiment-overview { grid-template-columns: 1fr 1fr 1fr; }
+}
+
+@media (max-width: 480px) {
+  .stats-grid-5 { grid-template-columns: 1fr 1fr; }
+  .add-bar { flex-direction: column; align-items: stretch; }
+  .ob-ltp { font-size: 22px; }
+  th, td { font-size: 10.5px; }
+}
+
+/* ─── Overlay ───────────────────────────────────────────────────────────── */
+.sidebar-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.6); z-index: 199; backdrop-filter: blur(2px);
+}
+.sidebar-overlay.show { display: block; }
+
+/* ─── Ticker tape ───────────────────────────────────────────────────────── */
+.ticker-wrap {
+  overflow: hidden; height: 28px;
+  background: var(--card); border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; flex-shrink: 0;
+}
+.ticker-inner {
+  display: flex; gap: 0; white-space: nowrap;
+  animation: ticker 40s linear infinite;
+}
+.ticker-item {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 0 18px; font-size: 10px; border-right: 1px solid var(--border);
+}
+.ticker-sym { font-family: var(--mono); font-weight: 700; font-size: 9.5px; color: var(--text); }
+.ticker-price { font-family: var(--mono); font-size: 9.5px; }
+.ticker-chg { font-family: var(--mono); font-size: 8.5px; }
+
+/* Fade-in for pages */
+.page > * { animation: fadeUp 0.25s ease both; }
+.page > *:nth-child(2) { animation-delay: 0.05s; }
+.page > *:nth-child(3) { animation-delay: 0.1s; }
+
+/* Toast */
+.toast {
+  position: fixed; bottom: 24px; right: 24px;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 10px; padding: 12px 18px;
+  font-size: 13px; font-weight: 500;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  z-index: 9999;
+  animation: fadeUp 0.3s ease;
+  transition: opacity 0.3s;
+}
+</style>
+</head>
+<body>
+
+<div id="root">
+  <!-- ── Sidebar ── -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon">Q</div>
+      <div>
+        <div class="sidebar-logo-text">QuantX</div>
+        <div class="sidebar-logo-sub">India · AI Trading</div>
+      </div>
+    </div>
+
+    <div class="sidebar-search">
+      <span style="font-size:13px;color:var(--sub)">⌕</span>
+      <input placeholder="Search symbol…" />
+    </div>
+
+    <div class="nav-section">
+      <div class="sec-label">Platform</div>
+      <div class="nav-item active" data-tab="portfolio" onclick="switchTab('portfolio')">
+        <span class="nav-icon">◈</span><span class="nav-label">Portfolio</span>
+      </div>
+      <div class="nav-item" data-tab="paper" onclick="switchTab('paper')">
+        <span class="nav-icon">◎</span><span class="nav-label">Paper Trade</span>
+        <span class="nav-badge new">NEW</span>
+      </div>
+      <div class="nav-item" data-tab="charts" onclick="switchTab('charts')">
+        <span class="nav-icon">⊞</span><span class="nav-label">Trading Chart</span>
+      </div>
+      <div class="nav-item" data-tab="news" onclick="switchTab('news')">
+        <span class="nav-icon">◑</span><span class="nav-label">Market News</span>
+        <span class="nav-badge live">LIVE</span>
+      </div>
+      <div class="nav-item" data-tab="ai" onclick="switchTab('ai')">
+        <span class="nav-icon">◉</span><span class="nav-label">AI Predict</span>
+      </div>
+      <div class="nav-item" data-tab="watchlist" onclick="switchTab('watchlist')">
+        <span class="nav-icon">☆</span><span class="nav-label">Watchlist</span>
+        <span class="nav-count" id="watch-count">5</span>
+      </div>
+      <div class="nav-item" data-tab="orderbook" onclick="switchTab('orderbook')">
+        <span class="nav-icon">≡</span><span class="nav-label">Order Book</span>
+      </div>
+    </div>
+
+    <div class="nav-section">
+      <div class="sec-label">Segments</div>
+      <div class="nav-item" onmouseenter="this.style.background='var(--card)';this.style.color='var(--text)'" onmouseleave="this.style.background='transparent';this.style.color='var(--sub)'"><span>▣</span><span>Equity</span></div>
+      <div class="nav-item" onmouseenter="this.style.background='var(--card)';this.style.color='var(--text)'" onmouseleave="this.style.background='transparent';this.style.color='var(--sub)'"><span>▦</span><span>F&amp;O</span></div>
+      <div class="nav-item" onmouseenter="this.style.background='var(--card)';this.style.color='var(--text)'" onmouseleave="this.style.background='transparent';this.style.color='var(--sub)'"><span>▤</span><span>Commodity</span></div>
+      <div class="nav-item" onmouseenter="this.style.background='var(--card)';this.style.color='var(--text)'" onmouseleave="this.style.background='transparent';this.style.color='var(--sub)'"><span>▥</span><span>Currency</span></div>
+    </div>
+
+    <div class="indices-section">
+      <div class="index-tile">
+        <div class="index-sym">NIFTY 50</div>
+        <div class="index-val" id="nifty-val">22,410.30</div>
+        <div class="index-chg pos" id="nifty-chg">▲ +0.58%</div>
+        <svg id="nifty-spark" viewBox="0 0 100 24" preserveAspectRatio="none" style="height:22px;width:100%;margin-top:5px"></svg>
+      </div>
+      <div class="index-tile">
+        <div class="index-sym">BANKNIFTY</div>
+        <div class="index-val" id="bn-val">48,210.55</div>
+        <div class="index-chg neg" id="bn-chg">▼ −0.17%</div>
+        <svg id="bn-spark" viewBox="0 0 100 24" preserveAspectRatio="none" style="height:22px;width:100%;margin-top:5px"></svg>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Overlay for mobile -->
+  <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+  <!-- ── Main ── -->
+  <div class="main">
+    <!-- TopBar -->
+    <div class="topbar">
+      <button class="hamburger" onclick="toggleSidebar()" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+      <div class="topbar-stat">
+        <div class="topbar-stat-label">Total Value</div>
+        <div class="topbar-stat-value">₹18,42,610</div>
+      </div>
+      <div class="topbar-stat">
+        <div class="topbar-stat-label">Today</div>
+        <div class="topbar-stat-value pos">+₹24,180 (+1.33%)</div>
+      </div>
+      <div class="topbar-stat" style="display:flex;flex-direction:column">
+        <div class="topbar-stat-label">Buying Power</div>
+        <div class="topbar-stat-value">₹3,85,000</div>
+      </div>
+      <div class="topbar-right">
+        <div class="live-badge">
+          <div class="live-dot"></div>
+          NSE LIVE
+        </div>
+        <div class="clock" id="clock">09:32:14 IST</div>
+      </div>
+    </div>
+
+    <!-- Ticker -->
+    <div class="ticker-wrap">
+      <div class="ticker-inner" id="ticker">
+        <!-- filled by JS -->
+      </div>
+    </div>
+
+    <!-- TabNav -->
+    <nav class="tabnav">
+      <div class="tab-item active" data-tab="portfolio" onclick="switchTab('portfolio')">Portfolio</div>
+      <div class="tab-item" data-tab="paper" onclick="switchTab('paper')">Paper Trading</div>
+      <div class="tab-item" data-tab="charts" onclick="switchTab('charts')">📈 Trading Chart</div>
+      <div class="tab-item" data-tab="news" onclick="switchTab('news')">📰 Market News</div>
+      <div class="tab-item" data-tab="ai" onclick="switchTab('ai')">AI Prediction</div>
+      <div class="tab-item" data-tab="watchlist" onclick="switchTab('watchlist')">☆ Watchlist</div>
+      <div class="tab-item" data-tab="orderbook" onclick="switchTab('orderbook')">≡ Order Book</div>
+    </nav>
+
+    <!-- Page Content -->
+    <div class="page-content" id="page-content"></div>
+  </div>
+
+  <!-- ── Right Rail ── -->
+  <aside class="right-rail">
+    <!-- Watchlist -->
+    <div class="rail-section">
+      <div class="rail-section-title">
+        Watchlist
+        <span class="nav-count">5</span>
+        <button onclick="railAddWatch()" style="margin-left:auto;background:transparent;border:1px solid var(--border);border-radius:5px;padding:2px 7px;font-size:9.5px;color:var(--sub);cursor:pointer;" onmouseenter="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseleave="this.style.borderColor='var(--border)';this.style.color='var(--sub)'">+ Add</button>
+      </div>
+      <div id="rail-watchlist" style="max-height:200px;overflow-y:auto"></div>
+    </div>
+
+    <!-- Kite status -->
+    <div class="rail-section">
+      <div class="rail-section-title">Zerodha Kite</div>
+      <div class="kite-status-pill">
+        <div class="live-dot"></div>
+        <div>
+          <div style="font-size:11px;color:var(--accent);font-weight:600">Connected</div>
+          <div style="font-size:9px;color:var(--sub)">sandbox · read-only mode</div>
+        </div>
+      </div>
+      <div class="kite-field">
+        <label>API Key</label>
+        <input readonly value="qx_demo_••••••" />
+      </div>
+      <div class="kite-field">
+        <label>Access Token</label>
+        <input readonly value="••••••••••••••••" />
+      </div>
+      <button style="width:100%;margin-top:8px;padding:7px;border-radius:7px;background:rgba(0,200,83,.08);border:1px solid rgba(0,200,83,.2);color:var(--accent);font-size:10px;font-weight:700;cursor:pointer;font-family:var(--font)">↻ Reconnect</button>
+    </div>
+
+    <!-- News feed -->
+    <div style="font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--sub);padding:14px 15px 6px">Market News</div>
+    <div id="rail-news" style="flex:1;overflow-y:auto;padding:0 15px 15px"></div>
+  </aside>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast" style="display:none"></div>
+
+<script>
+// ─── Data ────────────────────────────────────────────────────────────────────
+const HOLDINGS = [
+  { symbol:'RELIANCE', name:'Reliance Industries', qty:15, avgPrice:2820.50, ltp:2943.60, todayPnl:+840, todayPct:+0.29, totalPnl:+1845.00, totalPct:+4.37 },
+  { symbol:'TCS',      name:'Tata Consultancy',   qty:8,  avgPrice:3650.00, ltp:3812.45, todayPnl:+620, todayPct:+1.65, totalPnl:+1299.60, totalPct:+4.45 },
+  { symbol:'INFY',     name:'Infosys Ltd',         qty:20, avgPrice:1420.00, ltp:1487.80, todayPnl:-340, todayPct:-0.23, totalPnl:+1356.00, totalPct:+4.77 },
+  { symbol:'HDFCBANK', name:'HDFC Bank Ltd',       qty:12, avgPrice:1580.00, ltp:1642.10, todayPnl:+720, todayPct:+0.44, totalPnl:+745.20,  totalPct:+3.93 },
+  { symbol:'WIPRO',    name:'Wipro Ltd',            qty:30, avgPrice:468.00,  ltp:481.75, todayPnl:-210, todayPct:-0.43, totalPnl:+412.50,  totalPct:+2.94 },
+]
+
+const WATCHLIST_DATA = [
+  { symbol:'BAJFINANCE', name:'Bajaj Finance Ltd', exchange:'NSE', price:6724.90, chg:+2.14, chgAbs:+141.10, low:6580, high:6740, source:'MOCK' },
+  { symbol:'TATAMOTORS', name:'Tata Motors Ltd',   exchange:'NSE', price:812.60,  chg:-0.87, chgAbs:-7.15,   low:808,  high:820,  source:'MOCK' },
+  { symbol:'SBIN',       name:'State Bank of India',exchange:'NSE',price:734.20,  chg:+1.02, chgAbs:+7.40,   low:726,  high:736,  source:'MOCK' },
+  { symbol:'MARUTI',     name:'Maruti Suzuki',     exchange:'NSE', price:10542.0, chg:+0.58, chgAbs:+60.80,  low:10480,high:10570,source:'MOCK' },
+  { symbol:'NTPC',       name:'NTPC Ltd',           exchange:'NSE', price:389.45,  chg:-1.23, chgAbs:-4.85,   low:386,  high:394,  source:'MOCK' },
+]
+
+const TICKER_DATA = [
+  { sym:'NIFTY 50',   price:22410.30, chg:+0.58 },
+  { sym:'BANKNIFTY',  price:48210.55, chg:-0.17 },
+  { sym:'RELIANCE',   price:2943.60,  chg:+0.29 },
+  { sym:'TCS',        price:3812.45,  chg:+1.65 },
+  { sym:'INFY',       price:1487.80,  chg:-0.23 },
+  { sym:'HDFCBANK',   price:1642.10,  chg:+0.44 },
+  { sym:'WIPRO',      price:481.75,   chg:-0.43 },
+  { sym:'BAJFINANCE', price:6724.90,  chg:+2.14 },
+  { sym:'TATAMOTORS', price:812.60,   chg:-0.87 },
+  { sym:'SBIN',       price:734.20,   chg:+1.02 },
+  { sym:'MARUTI',     price:10542.0,  chg:+0.58 },
+  { sym:'NTPC',       price:389.45,   chg:-1.23 },
+  { sym:'GOLD MCX',   price:71840.0,  chg:+0.92 },
+  { sym:'USDINR',     price:83.42,    chg:-0.08 },
+]
+
+const NEWS_DATA = [
+  { id:1,  source:'MINT',      title:'FIIs buy ₹4,200 Cr in Indian equities; IT sector leads gains on strong Q2 earnings outlook',                   sentiment:'bullish', symbols:['NIFTY50','INFY','TCS'],     mins:2  },
+  { id:2,  source:'ET',        title:'RBI likely to hold rates in December policy — economists polled expect status quo on repo rate',                 sentiment:'neutral', symbols:['BANKNIFTY'],                mins:8  },
+  { id:3,  source:'CNBC-TV18', title:'BankNifty faces stiff resistance at 48,500; PCR ratio signals caution for bulls above current levels',          sentiment:'bearish', symbols:['BANKNIFTY'],                mins:14 },
+  { id:4,  source:'BSE',       title:'Reliance Q2 results: Net profit up 8.9% YoY at ₹17,394 Cr, beats Street estimates on Jio growth',              sentiment:'bullish', symbols:['RELIANCE'],                 mins:22 },
+  { id:5,  source:'NSE',       title:'SEBI tightens F&O entry norms — weekly expiry contracts to be restricted from January 2025',                    sentiment:'bearish', symbols:['NIFTY50','BANKNIFTY'],      mins:35 },
+  { id:6,  source:'MCX',       title:'Gold futures cross ₹73,000 mark; safe-haven demand accelerates on Middle East tensions',                        sentiment:'bullish', symbols:['GOLD'],                     mins:48 },
+  { id:7,  source:'HDFC SEC',  title:'Infosys raises FY25 revenue guidance to 4.5–5%; large deal wins drive optimism for IT sector',                  sentiment:'bullish', symbols:['INFY','TCS','WIPRO'],       mins:62 },
+  { id:8,  source:'IIFL',      title:'Crude oil prices dip 2.1% on rising US inventories; MCX Crude futures fall below ₹6,800',                      sentiment:'bearish', symbols:['CRUDEOIL'],                 mins:75 },
+  { id:9,  source:'ET MKTS',   title:'Midcap index outperforms Nifty 50 for third consecutive week amid domestic institutional buying',               sentiment:'bullish', symbols:['NIFTY50'],                  mins:90 },
+  { id:10, source:'ZERODHA',   title:'Options expiry week: High implied volatility expected in BankNifty; traders advised caution',                   sentiment:'neutral', symbols:['BANKNIFTY'],                mins:110 },
+  { id:11, source:'LIVEMINT',  title:'HDFC Bank quarterly net interest margin contracts slightly; loan growth remains resilient at 17%',              sentiment:'neutral', symbols:['HDFCBANK'],                 mins:130 },
+  { id:12, source:'BQ PRIME',  title:'Auto sector hits record: Maruti Suzuki, Tata Motors report strong festive season volume data',                  sentiment:'bullish', symbols:['MARUTI','TATAMOTORS'],      mins:155 },
+  { id:13, source:'REUTERS',   title:'India GDP growth forecast revised upward to 7.2% for FY25 by IMF; consumption drives momentum',                sentiment:'bullish', symbols:['NIFTY50'],                  mins:180 },
+  { id:14, source:'FE',        title:'Power sector stocks decline after CERC proposes new tariff regulations curbing return on equity',               sentiment:'bearish', symbols:['NTPC','POWERGRID'],         mins:200 },
+]
+
+const OB_SYMBOLS = [
+  { sym:'RELIANCE', name:'Reliance Industries', base:2943.60, tick:0.05 },
+  { sym:'TCS',      name:'Tata Consultancy',   base:3812.45, tick:0.05 },
+  { sym:'HDFCBANK', name:'HDFC Bank Ltd',      base:1642.10, tick:0.05 },
+  { sym:'INFY',     name:'Infosys Ltd',         base:1487.80, tick:0.05 },
+  { sym:'NIFTY 50', name:'Nifty 50 Index',      base:22410.3, tick:0.5  },
+  { sym:'BANKNIFTY',name:'Bank Nifty Index',    base:48210.5, tick:0.5  },
+  { sym:'BAJFINANCE',name:'Bajaj Finance',      base:6724.90, tick:0.05 },
+  { sym:'TATAMOTORS',name:'Tata Motors',        base:812.60,  tick:0.05 },
+]
+
+// ─── State ──────────────────────────────────────────────────────────────────
+let activeTab = 'portfolio'
+let timePill  = '1W'
+let obSymIdx  = 0
+let obBook    = null
+let obQuote   = null
+let obPrefill = { price: 2943.60, side:'BUY' }
+let obInterval= null
+let newsFilter= { cat:'All', sentiment:'All' }
+let sidebarOpen = false
+
+// ─── Utilities ───────────────────────────────────────────────────────────────
+const fmt = (n, d=2) => n.toLocaleString('en-IN', { minimumFractionDigits:d, maximumFractionDigits:d })
+const fmtVol = n => n >= 1e7 ? (n/1e7).toFixed(2)+' Cr' : n >= 1e5 ? (n/1e5).toFixed(2)+' L' : n >= 1000 ? (n/1000).toFixed(1)+'K' : String(n)
+const timeAgo = m => m < 1 ? 'just now' : m < 60 ? `${m}m ago` : `${Math.floor(m/60)}h ago`
+const sentMeta = s => s==='bullish'
+  ? {color:'var(--accent)', label:'▲ BULLISH', bg:'rgba(0,200,83,.1)', border:'rgba(0,200,83,.2)'}
+  : s==='bearish'
+  ? {color:'var(--red)',    label:'▼ BEARISH', bg:'rgba(255,82,82,.1)',border:'rgba(255,82,82,.2)'}
+  : {color:'var(--yellow)', label:'● NEUTRAL', bg:'rgba(255,215,64,.1)',border:'rgba(255,215,64,.2)'}
+
+function showToast(msg, color='var(--accent)') {
+  const t = document.getElementById('toast')
+  t.textContent = msg
+  t.style.borderLeftColor = color
+  t.style.borderLeftWidth = '3px'
+  t.style.borderLeftStyle = 'solid'
+  t.style.display = 'block'
+  t.style.opacity = '1'
+  setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.style.display = 'none', 300) }, 2500)
+}
+
+// ─── Clock ───────────────────────────────────────────────────────────────────
+function updateClock() {
+  const now = new Date()
+  const t = now.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false, timeZone:'Asia/Kolkata' })
+  document.getElementById('clock').textContent = t + ' IST'
+}
+setInterval(updateClock, 1000)
+updateClock()
+
+// ─── Ticker ──────────────────────────────────────────────────────────────────
+function buildTicker() {
+  const data = [...TICKER_DATA, ...TICKER_DATA]
+  const html = data.map(d => `
+    <span class="ticker-item">
+      <span class="ticker-sym">${d.sym}</span>
+      <span class="ticker-price" style="color:${d.chg>=0?'var(--accent)':'var(--red)'}">${fmt(d.price)}</span>
+      <span class="ticker-chg" style="color:${d.chg>=0?'var(--accent)':'var(--red)'}">${d.chg>=0?'▲':'▼'} ${Math.abs(d.chg).toFixed(2)}%</span>
+    </span>
+  `).join('')
+  document.getElementById('ticker').innerHTML = html
+}
+buildTicker()
+
+// ─── Sparks ──────────────────────────────────────────────────────────────────
+function drawSpark(id, positive) {
+  const el = document.getElementById(id)
+  if (!el) return
+  const pts = Array.from({length:20},(_,i) => `${i*5},${12+(Math.random()-(positive?.35:.65))*8}`).join(' ')
+  el.innerHTML = `<polyline points="${pts}" fill="none" stroke="${positive?'var(--accent)':'var(--red)'}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity=".7"/>`
+}
+drawSpark('nifty-spark', true)
+drawSpark('bn-spark', false)
+
+// ─── Rail Watchlist ───────────────────────────────────────────────────────────
+function renderRailWatchlist() {
+  const el = document.getElementById('rail-watchlist')
+  el.innerHTML = WATCHLIST_DATA.map(w => {
+    const up = w.chg >= 0
+    return `
+    <div class="watch-row">
+      <div style="flex:1;min-width:0">
+        <div class="watch-sym">${w.symbol}</div>
+        <div class="watch-name">${w.name}</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <div class="watch-price" style="color:${up?'var(--accent)':'var(--red)'}">${fmt(w.price)}</div>
+        <span class="watch-pct" style="background:${up?'rgba(0,200,83,.09)':'rgba(255,82,82,.09)'};color:${up?'var(--accent)':'var(--red)'}">${up?'+':''}${w.chg.toFixed(2)}%</span>
+      </div>
+      <button onclick="removeWatch('${w.symbol}')" style="background:transparent;border:none;color:var(--muted);font-size:11px;cursor:pointer;padding:0 2px;flex-shrink:0" onmouseenter="this.style.color='var(--red)'" onmouseleave="this.style.color='var(--muted)'">✕</button>
+    </div>`
+  }).join('')
+}
+function removeWatch(sym) { showToast(`Removed ${sym} from watchlist`, 'var(--red)') }
+function railAddWatch()   { showToast('Added next instrument to watchlist') }
+renderRailWatchlist()
+
+// ─── Rail News ───────────────────────────────────────────────────────────────
+function renderRailNews() {
+  const el = document.getElementById('rail-news')
+  el.innerHTML = NEWS_DATA.slice(0, 8).map(n => {
+    const m = sentMeta(n.sentiment)
+    return `
+    <div class="news-row">
+      <div class="news-meta">
+        <span class="news-source">${n.source}</span>
+        <span class="news-ago">${timeAgo(n.mins)}</span>
+      </div>
+      <div class="news-title">${n.title}</div>
+      <span class="news-sentiment" style="background:${m.bg};color:${m.color};border:1px solid ${m.border}">${m.label}</span>
+    </div>`
+  }).join('')
+}
+renderRailNews()
+
+// ─── Mini Chart (canvas) ──────────────────────────────────────────────────────
+function drawMiniChart(canvasId, data, color='#00c853') {
+  const canvas = document.getElementById(canvasId)
+  if (!canvas) return
+  const ctx = canvas.getContext('2d')
+  const W = canvas.offsetWidth || 500, H = canvas.offsetHeight || 150
+  canvas.width = W; canvas.height = H
+
+  const min = Math.min(...data), max = Math.max(...data), range = max - min || 1
+  const pts = data.map((v, i) => ({ x: (i / (data.length-1)) * W, y: H - ((v-min)/range) * H * 0.85 - H*0.05 }))
+
+  // Fill
+  const grad = ctx.createLinearGradient(0,0,0,H)
+  grad.addColorStop(0, color + '28')
+  grad.addColorStop(1, color + '00')
+  ctx.beginPath()
+  pts.forEach((p,i) => i===0 ? ctx.moveTo(p.x,p.y) : ctx.lineTo(p.x,p.y))
+  ctx.lineTo(W, H); ctx.lineTo(0, H); ctx.closePath()
+  ctx.fillStyle = grad; ctx.fill()
+
+  // Line
+  ctx.beginPath()
+  pts.forEach((p,i) => i===0 ? ctx.moveTo(p.x,p.y) : ctx.lineTo(p.x,p.y))
+  ctx.strokeStyle = color; ctx.lineWidth = 1.8; ctx.stroke()
+}
+
+function genSeries(n, base, drift, vol) {
+  const d = [base]
+  for (let i=1;i<n;i++) d.push(+(d[i-1] * (1 + drift + (Math.random()-.5)*vol)).toFixed(2))
+  return d
+}
+
+// ─── Tab switching ────────────────────────────────────────────────────────────
+function switchTab(tab) {
+  activeTab = tab
+  // Nav items
+  document.querySelectorAll('.nav-item[data-tab]').forEach(el => el.classList.toggle('active', el.dataset.tab === tab))
+  document.querySelectorAll('.tab-item[data-tab]').forEach(el => el.classList.toggle('active', el.dataset.tab === tab))
+
+  if (obInterval) { clearInterval(obInterval); obInterval = null }
+
+  const content = document.getElementById('page-content')
+  const pages = {
+    portfolio: renderPortfolio,
+    paper:     renderPaper,
+    charts:    renderCharts,
+    news:      renderNews,
+    ai:        renderAI,
+    watchlist: renderWatchlist,
+    orderbook: renderOrderBook,
+  }
+  ;(pages[tab] || renderPortfolio)(content)
+
+  if (window.innerWidth < 768 && sidebarOpen) closeSidebar()
+}
+
+// ─── Sidebar mobile ───────────────────────────────────────────────────────────
+function toggleSidebar() {
+  sidebarOpen ? closeSidebar() : openSidebar()
+}
+function openSidebar() {
+  sidebarOpen = true
+  document.getElementById('sidebar').classList.add('open')
+  document.getElementById('sidebar-overlay').classList.add('show')
+}
+function closeSidebar() {
+  sidebarOpen = false
+  document.getElementById('sidebar').classList.remove('open')
+  document.getElementById('sidebar-overlay').classList.remove('show')
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// PORTFOLIO PAGE
+// ═════════════════════════════════════════════════════════════════════════════
+function renderPortfolio(content) {
+  const pills = ['1D','1W','1M','3M','1Y','All']
+  content.innerHTML = `
+  <div class="page">
+    <div class="page-header">
+      <div class="page-hero">
+        <div>
+          <div class="page-title-sub">Portfolio Performance</div>
+          <div class="page-value">₹18,42,610</div>
+          <div class="page-change pos">▲ +₹24,180 (+1.33%) Today</div>
+        </div>
+        <div class="time-pills">
+          ${pills.map(p => `<div class="time-pill${p===timePill?' active':''}" onclick="setPill('${p}')">${p}</div>`).join('')}
+        </div>
+      </div>
+      <div class="chart-container"><canvas id="perf-chart"></canvas></div>
+    </div>
+    <div class="section-body">
+      <div class="section-heading">Holdings</div>
+      <div style="overflow-x:auto">
+        <table>
+          <thead>
+            <tr>
+              <th>Symbol</th>
+              <th class="r">Shares</th>
+              <th class="r">Value</th>
+              <th class="r">Today's Return</th>
+              <th class="r">Total Return</th>
+              <th class="r">Price/Share</th>
+              <th class="r">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${HOLDINGS.map(h => {
+              const up = h.totalPnl >= 0, td = h.todayPnl >= 0
+              return `<tr>
+                <td class="sym-cell"><div class="sym">${h.symbol}</div><div class="name">${h.name}</div></td>
+                <td class="r">${h.qty}</td>
+                <td class="r">₹${fmt(h.qty*h.ltp,0)}</td>
+                <td class="r ${td?'pos':'neg'}">${td?'+':''}₹${fmt(Math.abs(h.todayPnl),0)} (${td?'+':''}${h.todayPct.toFixed(2)}%)</td>
+                <td class="r ${up?'pos':'neg'}">${up?'+':''}₹${fmt(Math.abs(h.totalPnl),0)} (${up?'+':''}${h.totalPct.toFixed(2)}%)</td>
+                <td class="r">₹${fmt(h.ltp)}</td>
+                <td class="r"><button class="btn-sell" onclick="showToast('SELL ${h.symbol} — Order placed','var(--red)')">Sell</button></td>
+              </tr>`
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>`
+
+  setTimeout(() => {
+    const data = genSeries(60, 1620000, 0.0006, 0.008)
+    drawMiniChart('perf-chart', data, '#00c853')
+  }, 50)
+}
+
+window.setPill = (p) => { timePill = p; renderPortfolio(document.getElementById('page-content')) }
+
+// ═════════════════════════════════════════════════════════════════════════════
+// PAPER TRADE PAGE
+// ═════════════════════════════════════════════════════════════════════════════
+function renderPaper(content) {
+  const positions = [
+    { symbol:'RELIANCE',   qty:10, avgPrice:2920.00, ltp:2943.60, pnl:+236,  pct:+0.81 },
+    { symbol:'BANKNIFTY',  qty:1,  avgPrice:48050.0, ltp:48210.5, pnl:+160.5,pct:+0.33 },
+    { symbol:'INFY',       qty:15, avgPrice:1502.00, ltp:1487.80, pnl:-213,  pct:-0.94 },
+  ]
+  const orders = [
+    { id:'ORD-001', symbol:'TCS',      side:'BUY',  qty:5,  price:3780.00, status:'EXECUTED', time:'09:18' },
+    { id:'ORD-002', symbol:'HDFCBANK', side:'SELL', qty:3,  price:1638.00, status:'EXECUTED', time:'09:32' },
+    { id:'ORD-003', symbol:'WIPRO',    side:'BUY',  qty:20, price:0,       status:'MARKET',   time:'09:41' },
+  ]
+
+  content.innerHTML = `
+  <div class="page">
+    <!-- Stats -->
+    <div class="page-header">
+      <div class="page-title-sub" style="margin-bottom:12px">Paper Trading Account</div>
+      <div class="stats-grid-5">
+        ${[
+          ['Virtual Balance','₹10,00,000','var(--text)'],
+          ['Total P&L',      '+₹18,420',  'var(--accent)'],
+          ['Today P&L',      '+₹4,210',   'var(--accent)'],
+          ['Trades',         String(orders.length), 'var(--text)'],
+          ['Win Rate',       '66.7%',     'var(--accent)'],
+        ].map(([l,v,c]) => `
+          <div class="stat-block">
+            <div class="stat-label">${l}</div>
+            <div class="stat-value" style="color:${c}">${v}</div>
+          </div>`).join('')}
+      </div>
+    </div>
+
+    <div class="section-body" style="display:flex;flex-direction:column;gap:16px">
+      <!-- Order Form -->
+      <div class="card">
+        <div class="card-title">Place Paper Order</div>
+        <div class="form-grid-3">
+          <div><label class="form-label">Symbol</label><input class="form-input" id="pt-sym" value="RELIANCE" style="text-transform:uppercase" /></div>
+          <div><label class="form-label">Exchange</label><select class="form-input" id="pt-exch"><option>NSE</option><option>BSE</option><option>NFO</option><option>MCX</option></select></div>
+          <div><label class="form-label">Order Type</label><select class="form-input" id="pt-otype"><option>MARKET</option><option>LIMIT</option><option>SL-M</option><option>SL</option></select></div>
+        </div>
+        <div class="form-grid-4">
+          <div><label class="form-label">Quantity</label><input type="number" class="form-input" id="pt-qty" value="10" /></div>
+          <div><label class="form-label">Price (₹)</label><input type="number" class="form-input" id="pt-price" value="2943.60" /></div>
+          <div><label class="form-label">Stop Loss (₹)</label><input type="number" class="form-input" id="pt-sl" value="2910.00" /></div>
+          <div class="btn-pair">
+            <button class="btn-buy"       onclick="placePaperOrder('BUY')">Buy</button>
+            <button class="btn-sell-main" onclick="placePaperOrder('SELL')">Sell</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Positions -->
+      <div class="card">
+        <div class="card-title">Open Positions</div>
+        <div style="overflow-x:auto">
+          <table>
+            <thead><tr>${['Symbol','Qty','Avg Price','LTP','P&L','Change'].map((h,i)=>`<th ${i>0?'class="r"':''}>${h}</th>`).join('')}</tr></thead>
+            <tbody>
+              ${positions.map(p => {
+                const up = p.pnl >= 0
+                return `<tr>
+                  <td>${p.symbol}</td>
+                  <td class="r">${p.qty}</td>
+                  <td class="r">₹${fmt(p.avgPrice)}</td>
+                  <td class="r">₹${fmt(p.ltp)}</td>
+                  <td class="r ${up?'pos':'neg'}">${up?'+':''}₹${fmt(Math.abs(p.pnl),0)}</td>
+                  <td class="r ${up?'pos':'neg'}">${up?'+':''}${p.pct.toFixed(2)}%</td>
+                </tr>`
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Order Log -->
+      <div class="card">
+        <div class="card-title">Order Log</div>
+        ${orders.map(o => {
+          const isBuy = o.side === 'BUY'
+          return `<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border2);font-size:12px">
+            <span style="font-family:var(--mono);font-size:9.5px;color:var(--sub)">${o.time}</span>
+            <span style="padding:2px 7px;border-radius:4px;font-size:9.5px;font-weight:700;background:${isBuy?'rgba(0,200,83,.12)':'rgba(255,82,82,.12)'};color:${isBuy?'var(--accent)':'var(--red)'}">${o.side}</span>
+            <span style="font-family:var(--mono);font-weight:700">${o.symbol}</span>
+            <span style="color:var(--sub)">×${o.qty}</span>
+            <span style="font-family:var(--mono)">${o.price ? '₹'+fmt(o.price) : 'MARKET'}</span>
+            <span style="margin-left:auto;font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;background:rgba(0,200,83,.08);color:var(--accent)">${o.status}</span>
+          </div>`
+        }).join('')}
+      </div>
+    </div>
+  </div>`
+}
+
+window.placePaperOrder = (side) => {
+  const sym = document.getElementById('pt-sym')?.value || 'RELIANCE'
+  showToast(`${side} ${sym} — Paper order placed`, side === 'BUY' ? 'var(--accent)' : 'var(--red)')
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// CHARTS PAGE
+// ═════════════════════════════════════════════════════════════════════════════
+function renderCharts(content) {
+  content.innerHTML = `
+  <div class="page">
+    <div class="page-header">
+      <div class="page-hero">
+        <div>
+          <div class="page-title-sub">Trading Chart</div>
+          <div class="page-value">RELIANCE  <span style="font-size:18px;color:var(--sub)">NSE</span></div>
+          <div class="page-change pos">₹2,943.60  ▲ +8.50 (+0.29%)</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <select class="form-input" style="width:auto;padding:5px 10px;font-size:12px">
+            ${['RELIANCE','TCS','INFY','HDFCBANK','WIPRO','NIFTY 50','BANKNIFTY'].map(s=>`<option>${s}</option>`).join('')}
+          </select>
+          <div class="time-pills">
+            ${['1m','5m','15m','1h','1D','1W'].map(p=>`<div class="time-pill${p==='1D'?' active':''}">${p}</div>`).join('')}
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="section-body" style="display:flex;flex-direction:column;gap:12px">
+      <div class="card" style="padding:16px">
+        <canvas id="main-chart" style="width:100%;height:300px;display:block"></canvas>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
+        ${[
+          ['Open','₹2,901.20'],['High','₹2,951.80'],['Low','₹2,895.40'],['Volume','23.4L'],
+          ['52W High','₹3,024.90','var(--accent)'],['52W Low','₹2,220.00','var(--red)'],
+          ['P/E Ratio','28.4x'],['Mkt Cap','₹19.8L Cr'],
+        ].map(([l,v,c='var(--text)'])=>`
+          <div class="stat-tile">
+            <div class="stat-tile-label">${l}</div>
+            <div class="stat-tile-value" style="color:${c}">${v}</div>
+          </div>`).join('')}
+      </div>
+    </div>
+  </div>`
+
+  setTimeout(() => {
+    const data = genSeries(180, 2800, 0.0004, 0.006)
+    drawMiniChart('main-chart', data, '#00c853')
+  }, 50)
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// NEWS PAGE
+// ═════════════════════════════════════════════════════════════════════════════
+function renderNews(content) {
+  const cats = ['All','Equity','F&O','Commodity','Currency','Economy','Global']
+  const sents = ['All','Bullish','Neutral','Bearish']
+  const items = NEWS_DATA
+  const bull = items.filter(i=>i.sentiment==='bullish').length
+  const neut = items.filter(i=>i.sentiment==='neutral').length
+  const bear = items.filter(i=>i.sentiment==='bearish').length
+  const tot  = items.length
+
+  content.innerHTML = `
+  <div class="page">
+    <div class="page-header">
+      <div class="page-hero">
+        <div>
+          <div class="page-title-sub">Market News</div>
+          <div style="font-size:22px;font-weight:700;letter-spacing:-0.5px">${items.length} <span style="font-size:14px;font-weight:400;color:var(--sub)">articles today</span></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="live-badge"><div class="live-dot"></div> LIVE FEED</div>
+        </div>
+      </div>
+
+      <!-- Sentiment bar -->
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 18px;margin-bottom:14px">
+        <div class="page-title-sub" style="margin-bottom:10px">Sentiment — ${items.length} articles</div>
+        <div class="sentiment-overview">
+          <div class="sentiment-card" style="background:rgba(0,200,83,.08);border:1px solid rgba(0,200,83,.15)">
+            <div class="sentiment-num pos">${bull}</div>
+            <div class="sentiment-lbl">Bullish</div>
+          </div>
+          <div class="sentiment-card" style="background:rgba(255,215,64,.08);border:1px solid rgba(255,215,64,.15)">
+            <div class="sentiment-num" style="color:var(--yellow)">${neut}</div>
+            <div class="sentiment-lbl">Neutral</div>
+          </div>
+          <div class="sentiment-card" style="background:rgba(255,82,82,.08);border:1px solid rgba(255,82,82,.15)">
+            <div class="sentiment-num neg">${bear}</div>
+            <div class="sentiment-lbl">Bearish</div>
+          </div>
+        </div>
+        <div style="display:flex;height:5px;border-radius:3px;overflow:hidden;gap:1px">
+          <div style="flex:${bull/tot};background:var(--accent);transition:flex .4s"></div>
+          <div style="flex:${neut/tot};background:var(--yellow);transition:flex .4s"></div>
+          <div style="flex:${bear/tot};background:var(--red);transition:flex .4s"></div>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+        <div class="news-filters">
+          ${sents.map(s => `<div class="filter-chip${newsFilter.sentiment===s?' active':''}" onclick="setNewsFilter('sentiment','${s}')">${s}</div>`).join('')}
+        </div>
+        <div style="width:1px;height:20px;background:var(--border)"></div>
+        <div class="news-filters">
+          ${cats.map(c => `<div class="filter-chip${newsFilter.cat===c?' active':''}" onclick="setNewsFilter('cat','${c}')">${c}</div>`).join('')}
+        </div>
+      </div>
+    </div>
+
+    <div class="section-body">
+      <div class="news-grid">
+        ${items.map(n => {
+          const m = sentMeta(n.sentiment)
+          return `
+          <div class="news-card">
+            <div class="news-card-sentiment-bar" style="background:${m.color};opacity:0.4"></div>
+            <div class="news-card-body">
+              <div class="news-card-meta">
+                <span class="news-card-source">${n.source}</span>
+                <span class="news-card-time">${timeAgo(n.mins)}</span>
+                <span class="news-sentiment" style="background:${m.bg};color:${m.color};border:1px solid ${m.border};margin-left:auto">${m.label}</span>
+              </div>
+              <div class="news-card-title">${n.title}</div>
+              <div class="news-card-symbols">
+                ${n.symbols.map(s=>`<span class="news-chip">${s}</span>`).join('')}
+              </div>
+            </div>
+          </div>`
+        }).join('')}
+      </div>
+    </div>
+  </div>`
+}
+
+window.setNewsFilter = (key, val) => {
+  newsFilter[key] = val
+  renderNews(document.getElementById('page-content'))
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// AI PAGE
+// ═════════════════════════════════════════════════════════════════════════════
+function renderAI(content) {
+  const predictions = [
+    { sym:'RELIANCE', signal:'BUY',  conf:84, target:3080, sl:2880, horizon:'5D', sentiment:'bullish' },
+    { sym:'TCS',      signal:'HOLD', conf:61, target:3900, sl:3700, horizon:'3D', sentiment:'neutral' },
+    { sym:'INFY',     signal:'SELL', conf:72, target:1420, sl:1540, horizon:'3D', sentiment:'bearish' },
+    { sym:'HDFCBANK', signal:'BUY',  conf:78, target:1720, sl:1600, horizon:'7D', sentiment:'bullish' },
+    { sym:'WIPRO',    signal:'HOLD', conf:55, target:500,  sl:462,  horizon:'2D', sentiment:'neutral' },
+  ]
+
+  content.innerHTML = `
+  <div class="page">
+    <div class="page-header">
+      <div class="page-hero">
+        <div>
+          <div class="page-title-sub">AI Prediction Engine</div>
+          <div class="page-value" style="font-size:22px">ML-Powered Signals</div>
+          <div style="font-size:11px;color:var(--sub);margin-top:4px">LSTM + Transformer model · Updated every 15 minutes</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="live-badge" style="background:rgba(179,136,255,.08);border-color:rgba(179,136,255,.2);color:var(--purple)">
+            <div style="width:5px;height:5px;border-radius:50%;background:var(--purple);animation:pulse 2s infinite"></div>
+            AI ACTIVE
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-body" style="display:flex;flex-direction:column;gap:14px">
+      <!-- Model metrics -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
+        ${[
+          ['Model Accuracy','78.4%'],['Sharpe Ratio','1.92'],['Win Rate Last 30D','63.2%'],['Avg Return/Trade','+2.1%'],
+        ].map(([l,v])=>`
+          <div class="stat-tile">
+            <div class="stat-tile-label">${l}</div>
+            <div class="stat-tile-value" style="color:var(--purple)">${v}</div>
+          </div>`).join('')}
+      </div>
+
+      <!-- Predictions table -->
+      <div class="card">
+        <div class="card-title">Active Predictions</div>
+        <div style="overflow-x:auto">
+          <table>
+            <thead><tr>
+              <th>Symbol</th>
+              <th class="r">Signal</th>
+              <th class="r">Confidence</th>
+              <th class="r">Target</th>
+              <th class="r">Stop Loss</th>
+              <th class="r">Horizon</th>
+              <th class="r">Sentiment</th>
+            </tr></thead>
+            <tbody>
+              ${predictions.map(p => {
+                const sc = p.signal==='BUY'?'var(--accent)':p.signal==='SELL'?'var(--red)':'var(--yellow)'
+                const m = sentMeta(p.sentiment)
+                return `<tr>
+                  <td><span style="font-weight:700">${p.sym}</span></td>
+                  <td class="r"><span style="padding:3px 10px;border-radius:5px;font-size:10.5px;font-weight:700;background:${sc}18;color:${sc};border:1px solid ${sc}30">${p.signal}</span></td>
+                  <td class="r">
+                    <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px">
+                      <div style="width:48px;height:4px;background:var(--card);border-radius:2px;overflow:hidden">
+                        <div style="width:${p.conf}%;height:100%;background:${sc};transition:width .5s"></div>
+                      </div>
+                      <span style="color:${sc};font-weight:600">${p.conf}%</span>
+                    </div>
+                  </td>
+                  <td class="r pos">₹${fmt(p.target)}</td>
+                  <td class="r neg">₹${fmt(p.sl)}</td>
+                  <td class="r" style="color:var(--sub)">${p.horizon}</td>
+                  <td class="r"><span class="news-sentiment" style="background:${m.bg};color:${m.color};border:1px solid ${m.border}">${m.label}</span></td>
+                </tr>`
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>`
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// WATCHLIST PAGE
+// ═════════════════════════════════════════════════════════════════════════════
+function renderWatchlist(content) {
+  content.innerHTML = `
+  <div class="page">
+    <div class="page-header">
+      <div class="page-hero">
+        <div>
+          <div class="page-title-sub">My Watchlist</div>
+          <div style="font-size:22px;font-weight:700;letter-spacing:-0.5px">${WATCHLIST_DATA.length} <span style="font-size:14px;font-weight:400;color:var(--sub)">symbols tracked</span></div>
+          <div style="font-size:11px;color:var(--sub);margin-top:4px">Prices refresh every 15 seconds · Click alert cell to set a price alert</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="live-badge" style="background:rgba(255,215,64,.07);border-color:rgba(255,215,64,.2);color:var(--yellow)">● Mock Simulator</div>
+          <button onclick="showToast('Quotes refreshed')" style="padding:5px 11px;border-radius:7px;border:1px solid var(--border);background:var(--card);color:var(--sub);font-size:11px;font-weight:600;cursor:pointer;font-family:var(--font)">↺ Refresh</button>
+        </div>
+      </div>
+
+      <div class="add-bar">
+        <div class="add-bar-field" style="flex:1 1 160px">
+          <label class="form-label">Symbol</label>
+          <input class="form-input" id="wl-sym" placeholder="e.g. WIPRO" style="text-transform:uppercase" />
+        </div>
+        <div class="add-bar-field">
+          <label class="form-label">Exchange</label>
+          <select class="form-input" id="wl-exch">
+            <option>NSE</option><option>BSE</option><option>NFO</option><option>MCX</option>
+          </select>
+        </div>
+        <button onclick="addToWatchlist()" style="padding:9px 18px;border-radius:8px;border:none;background:linear-gradient(135deg,#007a33,var(--accent));color:#000;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font);white-space:nowrap">+ Add to Watchlist</button>
+      </div>
+    </div>
+
+    <div class="mock-badge">
+      <span style="font-size:14px">💡</span>
+      <span><strong>Using mock prices.</strong> Set <code style="background:rgba(255,215,64,.12);padding:1px 5px;border-radius:3px;font-family:var(--mono)">TWELVE_DATA_API_KEY</code> in your <code style="background:rgba(255,215,64,.12);padding:1px 5px;border-radius:3px;font-family:var(--mono)">.env</code> for real NSE live prices.</span>
+    </div>
+
+    <div class="section-body">
+      <div style="overflow-x:auto">
+        <table>
+          <thead><tr>
+            <th>Symbol</th>
+            <th style="text-align:center">Exch</th>
+            <th class="r">Price</th>
+            <th class="r">Change</th>
+            <th class="r">Day Range L/H</th>
+            <th class="r">Alert</th>
+            <th style="text-align:center">Source</th>
+            <th class="r">Remove</th>
+          </tr></thead>
+          <tbody>
+            ${WATCHLIST_DATA.map(w => {
+              const up = w.chg >= 0
+              return `<tr>
+                <td class="sym-cell"><div class="sym">${w.symbol}</div><div class="name">${w.name}</div></td>
+                <td style="text-align:center"><span style="font-size:8.5px;font-weight:700;background:var(--card);border:1px solid var(--border);border-radius:3px;padding:2px 6px;color:var(--sub)">${w.exchange}</span></td>
+                <td class="r ${up?'pos':'neg'}" style="font-weight:600">₹${fmt(w.price)}</td>
+                <td class="r">
+                  <div style="text-align:right">
+                    <div class="${up?'pos':'neg'}" style="font-weight:600">${up?'+':''}${fmt(w.chgAbs)}</div>
+                    <span style="background:${up?'rgba(0,200,83,.09)':'rgba(255,82,82,.09)'};color:${up?'var(--accent)':'var(--red)'};border-radius:4px;padding:1px 5px;font-size:9.5px;display:inline-block;margin-top:2px">${up?'+':''}${w.chg.toFixed(2)}%</span>
+                  </div>
+                </td>
+                <td class="r" style="color:var(--sub)">
+                  <div>₹${fmt(w.low,0)}</div>
+                  <div style="color:var(--text)">₹${fmt(w.high,0)}</div>
+                </td>
+                <td class="r"><span style="color:var(--muted);border-bottom:1px dashed;cursor:pointer;font-family:var(--mono);font-size:11px" onclick="showToast('Click to set alert for ${w.symbol}','var(--yellow)')">—</span></td>
+                <td style="text-align:center"><span style="font-size:8px;font-weight:700;color:var(--sub)">${w.source}</span></td>
+                <td class="r"><button class="btn-sell" onclick="showToast('${w.symbol} removed','var(--red)')">✕</button></td>
+              </tr>`
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>`
+}
+
+window.addToWatchlist = () => {
+  const sym = document.getElementById('wl-sym')?.value?.trim().toUpperCase()
+  if (!sym) return
+  showToast(`Added ${sym} to watchlist`)
+  document.getElementById('wl-sym').value = ''
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// ORDER BOOK PAGE
+// ═════════════════════════════════════════════════════════════════════════════
+function genOBBook(mid, tick) {
+  const bids = Array.from({length:5},(_,i)=>({
+    price:+(mid-(i+1)*tick-Math.random()*tick*.3).toFixed(2),
+    qty:Math.floor(Math.random()*3000+200),
+    orders:Math.floor(Math.random()*40+1),
+  }))
+  const asks = Array.from({length:5},(_,i)=>({
+    price:+(mid+(i+1)*tick+Math.random()*tick*.3).toFixed(2),
+    qty:Math.floor(Math.random()*3000+200),
+    orders:Math.floor(Math.random()*40+1),
+  }))
+  return { bids, asks }
+}
+
+function genOBQuote(base) {
+  const ltp = +(base+(Math.random()-.49)*2).toFixed(2)
+  const change = +(ltp-base).toFixed(2)
+  const changePct = +((change/base)*100).toFixed(2)
+  return {
+    ltp, change, changePct,
+    open:+(base+(Math.random()-.45)*8).toFixed(2),
+    high:+(ltp+Math.random()*15).toFixed(2),
+    low:+(ltp-Math.random()*15).toFixed(2),
+    close:base,
+    atp:+(ltp+(Math.random()-.5)*3).toFixed(2),
+    volume:Math.floor(Math.random()*2000000+500000),
+    weekHigh:+(base*(1+Math.random()*.3)).toFixed(2),
+    weekLow:+(base*(1-Math.random()*.3)).toFixed(2),
+    circuitUp:+(base*1.2).toFixed(2),
+    circuitDn:+(base*.8).toFixed(2),
+  }
+}
+
+function tickOBBook(book, tick) {
+  const mutate = (l, dir) => ({
+    price: Math.max(0.01, +(l.price+(Math.random()<.3?dir*tick*(Math.random()<.5?1:-1):0)).toFixed(2)),
+    qty: Math.max(10, l.qty+Math.floor((Math.random()-.45)*400)),
+    orders: Math.max(1, l.orders+(Math.random()<.2?(Math.random()<.5?1:-1):0)),
+  })
+  return {
+    bids: book.bids.map(l=>mutate(l,-1)).sort((a,b)=>b.price-a.price),
+    asks: book.asks.map(l=>mutate(l, 1)).sort((a,b)=>a.price-b.price),
+  }
+}
+
+function renderOBDepthRows(levels, side) {
+  const maxQ = Math.max(...levels.map(l=>l.qty), 1)
+  return levels.map(l => {
+    const isBid = side === 'bid'
+    const pct = Math.min((l.qty/maxQ)*100, 100)
+    const barColor = isBid ? 'rgba(0,200,83,.12)' : 'rgba(255,82,82,.12)'
+    return `
+    <div class="ob-row" onclick="obSetPrefill(${l.price},'${isBid?'BUY':'SELL'}')">
+      <div class="ob-depth-bar" style="${isBid?'right':'left'}:0;width:${pct}%;background:${barColor}"></div>
+      ${isBid
+        ? `<span style="color:var(--accent);font-weight:600;text-align:left">${fmt(l.price)}</span>
+           <span style="text-align:center">${l.qty.toLocaleString('en-IN')}</span>
+           <span style="color:var(--sub);font-size:10.5px;text-align:right">${l.orders}</span>`
+        : `<span style="color:var(--sub);font-size:10.5px;text-align:left">${l.orders}</span>
+           <span style="text-align:center">${l.qty.toLocaleString('en-IN')}</span>
+           <span style="color:var(--red);font-weight:600;text-align:right">${fmt(l.price)}</span>`
+      }
+    </div>`
+  }).join('')
+}
+
+function renderOBPage(content) {
+  const sym = OB_SYMBOLS[obSymIdx]
+  if (!obQuote) obQuote = genOBQuote(sym.base)
+  if (!obBook)  obBook  = genOBBook(obQuote.ltp, sym.tick)
+  const isUp = obQuote.changePct >= 0
+
+  const totalBid = obBook.bids.reduce((s,l)=>s+l.qty,0)
+  const totalAsk = obBook.asks.reduce((s,l)=>s+l.qty,0)
+  const imbal = totalBid / (totalBid + totalAsk + .001)
+  const bestBid = obBook.bids[0]?.price ?? 0
+  const bestAsk = obBook.asks[0]?.price ?? 0
+  const spread  = +(bestAsk - bestBid).toFixed(2)
+  const spreadPct = bestBid > 0 ? +((spread/bestBid)*100).toFixed(3) : 0
+
+  const isBuy = obPrefill.side === 'BUY'
+
+  content.innerHTML = `
+  <div class="page" style="overflow:hidden">
+    <!-- Header -->
+    <div class="orderbook-header">
+      <div class="ob-symbol-row">
+        <div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:2px">
+            <span class="ob-sym">${sym.sym}</span>
+            <span class="ob-exch">${'NSE'}</span>
+            <span class="ob-live"><span style="width:5px;height:5px;border-radius:50%;background:var(--accent);display:inline-block;animation:pulse 2s infinite"></span>LIVE</span>
+          </div>
+          <div class="ob-name">${sym.name} · Market Depth</div>
+        </div>
+        <div style="text-align:right">
+          <div class="ob-ltp" style="color:${isUp?'var(--accent)':'var(--red)'}">₹${fmt(obQuote.ltp)}</div>
+          <div class="ob-change ${isUp?'pos':'neg'}">${isUp?'▲':'▼'} ${isUp?'+':''}${fmt(obQuote.change)} (${isUp?'+':''}${obQuote.changePct.toFixed(2)}%)</div>
+          <div class="ob-prev">Prev close ₹${fmt(obQuote.close)}</div>
+        </div>
+      </div>
+      <div class="symbol-pills">
+        ${OB_SYMBOLS.map((s,i)=>`<div class="sym-pill${i===obSymIdx?' active':''}" onclick="obSelectSym(${i})">${s.sym}</div>`).join('')}
+      </div>
+    </div>
+
+    <!-- Body -->
+    <div class="ob-body" style="flex:1;overflow:hidden">
+      <!-- Bids -->
+      <div class="ob-col">
+        <div class="ob-col-head">
+          <span>Price</span><span style="text-align:center">Qty</span><span style="text-align:right">Orders</span>
+        </div>
+        <div class="ob-section-label ob-section-bid"><span style="color:var(--accent)">BID (Buy Orders)</span></div>
+        <div class="ob-rows" id="ob-bids">${renderOBDepthRows(obBook.bids,'bid')}</div>
+        <div class="ob-total">
+          <span class="ob-total-label">Total Bid Qty</span>
+          <span class="ob-total-val pos" id="ob-bid-total">${totalBid.toLocaleString('en-IN')}</span>
+        </div>
+      </div>
+
+      <!-- Asks -->
+      <div class="ob-col" id="col-asks">
+        <div class="ob-col-head">
+          <span>Orders</span><span style="text-align:center">Qty</span><span style="text-align:right">Price</span>
+        </div>
+        <div class="ob-section-label ob-section-ask"><span style="color:var(--red)">ASK (Sell Orders)</span></div>
+        <div class="ob-rows" id="ob-asks">${renderOBDepthRows(obBook.asks,'ask')}</div>
+        <div class="ob-total">
+          <span class="ob-total-label">Total Ask Qty</span>
+          <span class="ob-total-val neg" id="ob-ask-total">${totalAsk.toLocaleString('en-IN')}</span>
+        </div>
+      </div>
+
+      <!-- Right col -->
+      <div class="ob-col" style="border-right:none">
+        <div class="ob-right">
+          <!-- Spread -->
+          <div class="stat-card">
+            <div class="stat-card-title">Spread</div>
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div>
+                <div style="font-family:var(--mono);font-size:18px;font-weight:700;color:var(--blue)">₹${fmt(spread)}</div>
+                <div style="font-family:var(--mono);font-size:10px;color:var(--sub);margin-top:1px">${spreadPct}%</div>
+              </div>
+              <div style="text-align:right">
+                <div style="font-size:9.5px;color:var(--sub);margin-bottom:2px">Best Bid</div>
+                <div style="font-family:var(--mono);font-size:12px;color:var(--accent);font-weight:600">₹${fmt(bestBid)}</div>
+                <div style="font-size:9.5px;color:var(--sub);margin-top:5px;margin-bottom:2px">Best Ask</div>
+                <div style="font-family:var(--mono);font-size:12px;color:var(--red);font-weight:600">₹${fmt(bestAsk)}</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Imbalance -->
+          <div class="stat-card">
+            <div class="stat-card-title">Depth Imbalance</div>
+            <div class="imbalance-bar" id="ob-imbal-bar">
+              <div style="flex:${imbal};background:var(--accent);transition:flex .4s ease"></div>
+              <div style="flex:${1-imbal};background:var(--red);transition:flex .4s ease"></div>
+            </div>
+            <div style="display:flex;justify-content:space-between">
+              <span style="font-family:var(--mono);font-size:9.5px;color:var(--accent)" id="ob-bid-pct">${(imbal*100).toFixed(1)}% Bid</span>
+              <span style="font-family:var(--mono);font-size:9.5px;color:var(--red)" id="ob-ask-pct">${((1-imbal)*100).toFixed(1)}% Ask</span>
+            </div>
+            <div class="imbalance-hint" id="ob-hint" style="background:${imbal>.55?'rgba(0,200,83,.07)':imbal<.45?'rgba(255,82,82,.07)':'rgba(255,215,64,.07)'};border:1px solid ${imbal>.55?'rgba(0,200,83,.15)':imbal<.45?'rgba(255,82,82,.15)':'rgba(255,215,64,.15)'}">
+              <span style="color:${imbal>.55?'var(--accent)':imbal<.45?'var(--red)':'var(--yellow)'}">${imbal>.55?'▲ Buy pressure dominant':imbal<.45?'▼ Sell pressure dominant':'● Balanced market depth'}</span>
+            </div>
+          </div>
+
+          <!-- Stats grid -->
+          <div class="stat-tile-grid">
+            ${[
+              ['Open',     `₹${fmt(obQuote.open)}`,   'var(--text)'],
+              ['Prev Close',`₹${fmt(obQuote.close)}`, 'var(--text)'],
+              ['Day High', `₹${fmt(obQuote.high)}`,   'var(--accent)'],
+              ['Day Low',  `₹${fmt(obQuote.low)}`,    'var(--red)'],
+              ['ATP',      `₹${fmt(obQuote.atp)}`,    'var(--text)'],
+              ['Volume',   fmtVol(obQuote.volume),     'var(--text)'],
+              ['52W High', `₹${fmt(obQuote.weekHigh)}`,'var(--accent)'],
+              ['52W Low',  `₹${fmt(obQuote.weekLow)}`, 'var(--red)'],
+              ['Ckt Up',   `₹${fmt(obQuote.circuitUp)}`,'var(--text)'],
+              ['Ckt Dn',   `₹${fmt(obQuote.circuitDn)}`,'var(--red)'],
+            ].map(([l,v,c]) => `
+              <div class="stat-tile">
+                <div class="stat-tile-label">${l}</div>
+                <div class="stat-tile-value" style="color:${c}">${v}</div>
+              </div>`).join('')}
+          </div>
+
+          <!-- Quick Order -->
+          <div style="background:var(--panel);border:1px solid var(--border);border-radius:10px;overflow:hidden" id="qo-wrap">
+            <div class="qo-toggle">
+              <button id="qo-buy" onclick="obToggleSide('BUY')" style="background:${isBuy?'rgba(0,200,83,.18)':'var(--card)'};color:${isBuy?'var(--accent)':'var(--muted)'};border-bottom:2px solid ${isBuy?'var(--accent)':'transparent'}">BUY</button>
+              <button id="qo-sell" onclick="obToggleSide('SELL')" style="background:${!isBuy?'rgba(255,82,82,.18)':'var(--card)'};color:${!isBuy?'var(--red)':'var(--muted)'};border-bottom:2px solid ${!isBuy?'var(--red)':'transparent'}">SELL</button>
+            </div>
+            <div class="qo-body">
+              <div class="qo-type">
+                <button id="qo-limit" onclick="obToggleOrderType('LIMIT')" style="color:var(--accent);border-color:rgba(0,200,83,.3);background:rgba(0,200,83,.07)">LIMIT</button>
+                <button id="qo-market" onclick="obToggleOrderType('MARKET')" style="color:var(--sub)">MARKET</button>
+              </div>
+              <div><label class="form-label">Qty</label><input type="number" class="form-input" id="qo-qty" value="1" style="padding:7px 9px" /></div>
+              <div>
+                <label class="form-label">Price (₹)</label>
+                <input type="number" class="form-input" id="qo-price" value="${obPrefill.price}" style="padding:7px 9px" step="0.05" />
+              </div>
+              <div class="qo-total">
+                <span class="qo-total-label">Estimated total</span>
+                <span class="qo-total-val" id="qo-est">₹${fmt(obPrefill.price)}</span>
+              </div>
+              <button class="qo-submit" id="qo-btn" style="background:${isBuy?'linear-gradient(135deg,#007a33,var(--accent))':'linear-gradient(135deg,#b71c1c,var(--red))'};color:${isBuy?'#000':'#fff'}"
+                onclick="obPlaceOrder()">${isBuy?'BUY':'SELL'} ${sym.sym}</button>
+              <div class="qo-disclaimer">Paper trade only · No real money at risk</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>`
+
+  // Live tick
+  obInterval = setInterval(() => {
+    if (activeTab !== 'orderbook') return
+    obBook = tickOBBook(obBook, sym.tick)
+    obQuote = { ...obQuote,
+      ltp: +(obQuote.ltp*(1+(Math.random()-.499)*.0006)).toFixed(2),
+      volume: obQuote.volume + Math.floor(Math.random()*2000),
+    }
+    const newChange = +(obQuote.ltp - sym.base).toFixed(2)
+    obQuote.change = newChange
+    obQuote.changePct = +((newChange/sym.base)*100).toFixed(2)
+    obQuote.high = Math.max(obQuote.high, obQuote.ltp)
+    obQuote.low  = Math.min(obQuote.low,  obQuote.ltp)
+
+    const bidEl = document.getElementById('ob-bids')
+    const askEl = document.getElementById('ob-asks')
+    if (bidEl) bidEl.innerHTML = renderOBDepthRows(obBook.bids,'bid')
+    if (askEl) askEl.innerHTML = renderOBDepthRows(obBook.asks,'ask')
+
+    const tBid = obBook.bids.reduce((s,l)=>s+l.qty,0)
+    const tAsk = obBook.asks.reduce((s,l)=>s+l.qty,0)
+    const im = tBid / (tBid + tAsk + .001)
+
+    const btEl = document.getElementById('ob-bid-total')
+    const atEl = document.getElementById('ob-ask-total')
+    const bpEl = document.getElementById('ob-bid-pct')
+    const apEl = document.getElementById('ob-ask-pct')
+    const barEl = document.getElementById('ob-imbal-bar')
+    const hintEl = document.getElementById('ob-hint')
+
+    if (btEl) btEl.textContent = tBid.toLocaleString('en-IN')
+    if (atEl) atEl.textContent = tAsk.toLocaleString('en-IN')
+    if (bpEl) bpEl.textContent = (im*100).toFixed(1)+'% Bid'
+    if (apEl) apEl.textContent = ((1-im)*100).toFixed(1)+'% Ask'
+    if (barEl) {
+      barEl.children[0].style.flex = im
+      barEl.children[1].style.flex = 1-im
+    }
+  }, 1500)
+}
+
+function renderOrderBook(content) {
+  obBook = null; obQuote = null
+  renderOBPage(content)
+}
+
+window.obSelectSym = (idx) => {
+  obSymIdx = idx; obBook = null; obQuote = null
+  if (obInterval) { clearInterval(obInterval); obInterval = null }
+  renderOBPage(document.getElementById('page-content'))
+}
+
+window.obSetPrefill = (price, side) => {
+  obPrefill = { price, side }
+  const qp = document.getElementById('qo-price')
+  const qb = document.getElementById('qo-btn')
+  const buy = document.getElementById('qo-buy')
+  const sel = document.getElementById('qo-sell')
+  const isBuy = side === 'BUY'
+  if (qp) qp.value = price
+  if (qb) { qb.textContent = `${side} ${OB_SYMBOLS[obSymIdx].sym}`; qb.style.background = isBuy?'linear-gradient(135deg,#007a33,var(--accent))':'linear-gradient(135deg,#b71c1c,var(--red))'; qb.style.color = isBuy?'#000':'#fff' }
+  if (buy) { buy.style.background = isBuy?'rgba(0,200,83,.18)':'var(--card)'; buy.style.color = isBuy?'var(--accent)':'var(--muted)'; buy.style.borderBottom = isBuy?'2px solid var(--accent)':'2px solid transparent' }
+  if (sel) { sel.style.background = !isBuy?'rgba(255,82,82,.18)':'var(--card)'; sel.style.color = !isBuy?'var(--red)':'var(--muted)'; sel.style.borderBottom = !isBuy?'2px solid var(--red)':'2px solid transparent' }
+  updateQOEst()
+}
+
+window.obToggleSide = (side) => obSetPrefill(parseFloat(document.getElementById('qo-price')?.value || obPrefill.price), side)
+
+window.obToggleOrderType = (type) => {
+  const lBtn = document.getElementById('qo-limit')
+  const mBtn = document.getElementById('qo-market')
+  const isBuy = obPrefill.side === 'BUY'
+  const sc = isBuy ? 'var(--accent)' : 'var(--red)'
+  if (type === 'LIMIT') {
+    lBtn.style.color = sc; lBtn.style.borderColor = `${sc}50`; lBtn.style.background = `${sc}10`
+    mBtn.style.color = 'var(--sub)'; mBtn.style.borderColor = 'var(--border)'; mBtn.style.background = 'transparent'
+  } else {
+    mBtn.style.color = sc; mBtn.style.borderColor = `${sc}50`; mBtn.style.background = `${sc}10`
+    lBtn.style.color = 'var(--sub)'; lBtn.style.borderColor = 'var(--border)'; lBtn.style.background = 'transparent'
+  }
+}
+
+function updateQOEst() {
+  const qty = parseInt(document.getElementById('qo-qty')?.value || '1') || 0
+  const price = parseFloat(document.getElementById('qo-price')?.value || '0') || 0
+  const el = document.getElementById('qo-est')
+  if (el) el.textContent = `₹${fmt(qty * price)}`
+}
+
+document.addEventListener('input', e => {
+  if (e.target.id === 'qo-qty' || e.target.id === 'qo-price') updateQOEst()
+})
+
+window.obPlaceOrder = () => {
+  const sym = OB_SYMBOLS[obSymIdx].sym
+  const side = obPrefill.side
+  const btn = document.getElementById('qo-btn')
+  if (btn) {
+    btn.textContent = '✓ Order Placed'
+    btn.style.background = 'rgba(0,200,83,.2)'; btn.style.color = 'var(--accent)'
+    setTimeout(() => {
+      btn.textContent = `${side} ${sym}`
+      const isBuy = side === 'BUY'
+      btn.style.background = isBuy?'linear-gradient(135deg,#007a33,var(--accent))':'linear-gradient(135deg,#b71c1c,var(--red))'
+      btn.style.color = isBuy?'#000':'#fff'
+    }, 2000)
+  }
+  showToast(`${side} ${sym} — Paper order placed`, side==='BUY'?'var(--accent)':'var(--red)')
+}
+
+// ─── Init ────────────────────────────────────────────────────────────────────
+switchTab('portfolio')
+
+// ─── Live price simulation ────────────────────────────────────────────────────
+setInterval(() => {
+  if (activeTab === 'orderbook') return
+  // Update index tiles subtly
+  const nv = +(22410.30 + (Math.random()-.5)*12).toFixed(2)
+  const bv = +(48210.55 + (Math.random()-.5)*40).toFixed(2)
+  const nEl = document.getElementById('nifty-val')
+  const bEl = document.getElementById('bn-val')
+  if (nEl) nEl.textContent = nv.toLocaleString('en-IN', {minimumFractionDigits:2})
+  if (bEl) bEl.textContent = bv.toLocaleString('en-IN', {minimumFractionDigits:2})
+}, 3000)
+</script>
+</body>
+</html>
