@@ -1,6 +1,6 @@
 // ── App Root ──────────────────────────────────────────────────────────────────
 import { useEffect } from 'react'
-import { useStore } from './context/store'
+import { useStore }   from './context/store'
 import { useActiveTab } from './hooks'
 import AppShell       from './components/layout/AppShell'
 import ToastStack     from './components/ui/ToastStack'
@@ -12,6 +12,7 @@ import WatchlistPage  from './pages/WatchlistPage'
 import MarketNewsPage from './pages/MarketNewsPage'
 import OrderBookPage  from './pages/OrderBookPage'
 
+// Renders the correct page based on active tab
 function ActivePage() {
   const tab = useActiveTab()
   switch (tab) {
@@ -19,9 +20,9 @@ function ActivePage() {
     case 'paper':      return <PaperTradePage />
     case 'charts':     return <LiveChartsPage />
     case 'news':       return <MarketNewsPage />
-    case 'orderbook':  return <OrderBookPage />
     case 'ai':         return <AIPage />
     case 'watchlist':  return <WatchlistPage />
+    case 'orderbook':  return <OrderBookPage />
     default:           return <PortfolioPage />
   }
 }
@@ -39,7 +40,7 @@ export default function App() {
     fetch('/api/instruments')
       .then(r => r.json())
       .then(json => { if (json.ok) setInstruments(json.data) })
-      .catch(() => { /* server may not be running in static preview */ })
+      .catch(() => {})
 
     fetchPortfolio()
     fetchWatchlist()

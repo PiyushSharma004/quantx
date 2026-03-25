@@ -74,3 +74,6 @@ export const useFetchWatchlistQuotes   = () => useStore(s => s.fetchWatchlistQuo
 export const useLivePriceStatus        = () => useStore(s => s.livePriceStatus)
 export const useFetchLivePriceStatus   = () => useStore(s => s.fetchLivePriceStatus)
 export const useFetchLivePrice         = () => useStore(s => s.fetchLivePrice)
+
+// THIS LINE FIXES THE ERROR — exports useStore from hooks so all files can find it
+export { useStore } from '../context/store'

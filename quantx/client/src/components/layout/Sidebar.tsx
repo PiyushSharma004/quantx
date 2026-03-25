@@ -5,11 +5,11 @@ import type { TabId } from '../../types'
 
 const NAV: { id: TabId; icon: string; label: string; badge?: string; countKey?: string }[] = [
   { id: 'portfolio',  icon: '◈', label: 'Portfolio' },
-  { id: 'paper',      icon: '◎', label: 'Paper Trade',  badge: 'NEW' },
+  { id: 'paper',      icon: '◎', label: 'Paper Trade',   badge: 'NEW' },
   { id: 'charts',     icon: '⊞', label: 'Trading Chart' },
-  { id: 'news',       icon: '◑', label: 'Market News',  badge: 'LIVE' },
+  { id: 'news',       icon: '◑', label: 'Market News',   badge: 'LIVE' },
   { id: 'ai',         icon: '◉', label: 'AI Predict' },
-  { id: 'watchlist',  icon: '☆', label: 'Watchlist',    countKey: 'watchlist' },
+  { id: 'watchlist',  icon: '☆', label: 'Watchlist',     countKey: 'watchlist' },
   { id: 'orderbook',  icon: '▤', label: 'Order Book' },
 ]
 
@@ -45,35 +45,26 @@ export default function Sidebar() {
 
   useEffect(() => { fetchWatchlist() }, [fetchWatchlist])
 
-  const s: Record<string, React.CSSProperties> = {
-    sidebar:     { width: 220, flexShrink: 0, background: 'var(--sidebar)', display: 'flex', flexDirection: 'column', borderRight: '1px solid var(--border)', overflowY: 'auto' },
-    logo:        { padding: '22px 20px 18px', display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid var(--border)' },
-    logoIcon:    { width: 34, height: 34, background: 'var(--accent)', borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, fontWeight: 700, color: '#000', flexShrink: 0 },
-    logoText:    { fontSize: 16, fontWeight: 700, color: 'var(--text)', letterSpacing: -0.4 },
-    search:      { margin: '14px 14px 4px', display: 'flex', alignItems: 'center', gap: 8, background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 9, padding: '8px 12px' },
-    searchInput: { background: 'none', border: 'none', color: 'var(--text)', fontFamily: 'Inter, sans-serif', fontSize: 12, flex: 1, outline: 'none' },
-    secLabel:    { fontSize: 9, fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: 1.2, color: 'var(--muted)', padding: '0 6px', marginBottom: 6 },
-    indices:     { marginTop: 'auto', padding: 14, borderTop: '1px solid var(--border)' },
-    tile:        { background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 10, padding: '11px 12px', marginBottom: 8, cursor: 'pointer' },
-  }
-
   return (
-    <aside style={s.sidebar}>
-      <div style={s.logo}>
-        <div style={s.logoIcon}>Q</div>
+    <aside style={{ width: 220, flexShrink: 0, background: 'var(--sidebar)', display: 'flex', flexDirection: 'column', borderRight: '1px solid var(--border)', overflowY: 'auto' }}>
+      {/* Logo */}
+      <div style={{ padding: '22px 20px 18px', display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid var(--border)' }}>
+        <div style={{ width: 34, height: 34, background: 'var(--accent)', borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, fontWeight: 700, color: '#000', flexShrink: 0 }}>Q</div>
         <div>
-          <div style={s.logoText}>QuantX</div>
+          <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)', letterSpacing: -0.4 }}>QuantX</div>
           <div style={{ fontSize: 9, color: 'var(--sub)', fontWeight: 600, letterSpacing: .3 }}>India · AI Trading</div>
         </div>
       </div>
 
-      <div style={s.search}>
+      {/* Search */}
+      <div style={{ margin: '14px 14px 4px', display: 'flex', alignItems: 'center', gap: 8, background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 9, padding: '8px 12px' }}>
         <span style={{ fontSize: 13, color: 'var(--sub)' }}>⌕</span>
-        <input style={s.searchInput} placeholder="Search symbol…" />
+        <input style={{ background: 'none', border: 'none', color: 'var(--text)', fontFamily: 'Inter, sans-serif', fontSize: 12, flex: 1, outline: 'none' }} placeholder="Search symbol…" />
       </div>
 
+      {/* Nav */}
       <div style={{ padding: '18px 14px 6px' }}>
-        <div style={s.secLabel}>Platform</div>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1.2, color: 'var(--muted)', padding: '0 6px', marginBottom: 6 }}>Platform</div>
         {NAV.map(item => {
           const isActive = activeTab === item.id
           const count    = item.countKey === 'watchlist' ? watchCount : 0
@@ -88,9 +79,11 @@ export default function Sidebar() {
                 color:      isActive ? 'var(--accent)' : 'var(--sub)',
                 background: isActive ? 'rgba(0,200,83,.08)' : 'transparent',
                 border:     `1px solid ${isActive ? 'rgba(0,200,83,.2)' : 'transparent'}`,
-                transition: 'all .14s', marginBottom: 2,
+                transition: 'all .14s', marginBottom: 2, position: 'relative',
               }}
             >
+              {/* Active indicator bar */}
+              {isActive && <span style={{ position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)', width: 3, height: 18, background: 'var(--accent)', borderRadius: '0 3px 3px 0' }} />}
               <span style={{ fontSize: 15 }}>{item.icon}</span>
               <span style={{ flex: 1 }}>{item.label}</span>
               {item.badge && (
@@ -108,10 +101,12 @@ export default function Sidebar() {
         })}
       </div>
 
+      {/* Segments */}
       <div style={{ padding: '14px 14px 6px' }}>
-        <div style={s.secLabel}>Segments</div>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1.2, color: 'var(--muted)', padding: '0 6px', marginBottom: 6 }}>Segments</div>
         {SEGMENTS.map(seg => (
-          <div key={seg.label} style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '8px 10px', borderRadius: 8, cursor: 'pointer', fontSize: 13, color: 'var(--sub)', transition: 'all .14s', marginBottom: 2 }}
+          <div key={seg.label}
+            style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '8px 10px', borderRadius: 8, cursor: 'pointer', fontSize: 13, color: 'var(--sub)', transition: 'all .14s', marginBottom: 2 }}
             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'var(--card)'; (e.currentTarget as HTMLElement).style.color = 'var(--text)' }}
             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--sub)' }}
           >
@@ -120,12 +115,13 @@ export default function Sidebar() {
         ))}
       </div>
 
-      <div style={s.indices}>
+      {/* Index tiles */}
+      <div style={{ marginTop: 'auto', padding: 14, borderTop: '1px solid var(--border)' }}>
         {[
-          { sym: 'NIFTY 50', val: nifty?.ltp?.toLocaleString('en-IN', { maximumFractionDigits: 2 }) ?? '22,410.30', chg: nifty?.changePct ?? 0.58 },
-          { sym: 'BANKNIFTY', val: bn?.ltp?.toLocaleString('en-IN', { maximumFractionDigits: 2 }) ?? '48,210.55', chg: bn?.changePct ?? -0.17 },
+          { sym: 'NIFTY 50',  val: nifty?.ltp?.toLocaleString('en-IN', { maximumFractionDigits: 2 }) ?? '22,410.30', chg: nifty?.changePct ?? 0.58 },
+          { sym: 'BANKNIFTY', val: bn?.ltp?.toLocaleString('en-IN',    { maximumFractionDigits: 2 }) ?? '48,210.55', chg: bn?.changePct    ?? -0.17 },
         ].map(idx => (
-          <div key={idx.sym} style={s.tile}>
+          <div key={idx.sym} style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 10, padding: '11px 12px', marginBottom: 8, cursor: 'pointer' }}>
             <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: .8, color: 'var(--sub)' }}>{idx.sym}</div>
             <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 15, fontWeight: 600, marginTop: 2 }}>{idx.val}</div>
             <div style={{ fontSize: 11, fontFamily: 'JetBrains Mono, monospace', color: idx.chg >= 0 ? 'var(--accent)' : 'var(--red)' }}>
