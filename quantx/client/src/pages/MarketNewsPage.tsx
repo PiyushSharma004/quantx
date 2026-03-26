@@ -1,8 +1,8 @@
 // ── Market News Page ──────────────────────────────────────────────────────────
 import { useEffect, useState, useMemo } from 'react'
-import { useNews, useStore } from '../hooks'
-import { AsyncView } from '../components/ui'
-import type { NewsItem } from '../types'
+import { useNews, useStore } from '../hooks/index'
+import { AsyncView } from '../components/ui/index'
+import type { NewsItem } from '../types/index'
 
 // ── Static seed news (used when backend isn't running) ───────────────────────
 const SEED_NEWS: NewsItem[] = [
