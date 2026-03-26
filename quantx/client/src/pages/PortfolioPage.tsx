@@ -1,12 +1,12 @@
 // ── Portfolio Page ────────────────────────────────────────────────────────────
 import { useEffect, useRef, useState } from 'react'
-import { Chart as ChartJS, LineElement, BarElement, PointElement, LinearScale, CategoryScale, Filler, Tooltip } from 'chart.js'
+import { Chart as ChartJS, LineElement, PointElement, LinearScale, CategoryScale, Filler, Tooltip, LineController } from 'chart.js'
+ChartJS.register(LineElement, PointElement, LinearScale, CategoryScale, Filler, Tooltip, LineController)
 import { useStore, useHoldings, useSummary, useTimeLabels, useOHLCVSeries } from '../hooks/index'
 import { AsyncView } from '../components/ui/index'
 import { fmtINR, CHART_OPTIONS, GRID_STYLE, TICK_STYLE } from '../utils/chart'
 import type { Holding } from '../types/index'
 
-ChartJS.register(LineElement, BarElement, PointElement, LinearScale, CategoryScale, Filler, Tooltip)
 
 const TIME_PILLS = ['1D','1W','1M','3M','1Y','All']
 
@@ -16,23 +16,23 @@ function PerfChart() {
   const labels = useTimeLabels(180, 'date').filter((_, i) => i % 3 === 0)
 
   useEffect(() => {
-    const ctx = ref.current?.getContext('2d')
-    if (!ctx) return
-    const chart = new ChartJS(ctx, {
-      type: 'line',
-      data: { labels, datasets: [{ data, borderColor: '#00c853', borderWidth: 2, pointRadius: 0, tension: .4, fill: true,
-        backgroundColor: (c) => { const g = c.chart.ctx.createLinearGradient(0,0,0,140); g.addColorStop(0,'rgba(0,200,83,.18)'); g.addColorStop(1,'rgba(0,200,83,0)'); return g }
-      }] },
-      options: { ...CHART_OPTIONS, scales: {
-        x: { grid: { color: GRID_STYLE.color }, ticks: { ...TICK_STYLE, maxTicksLimit: 6 } as never },
-        y: { grid: { color: GRID_STYLE.color }, ticks: { ...TICK_STYLE, callback: (v) => `₹${(+v/100000).toFixed(1)}L` } as never },
-      }},
-    })
-    return () => chart.destroy()
-  }, [])
-  return <canvas ref={ref} />
+  const ctx = ref.current?.getContext('2d')
+  if (!ctx) return
+  const existing = ChartJS.getChart(ctx)
+  if (existing) existing.destroy()
+  const chart = new ChartJS(ctx, {
+    type: 'line',
+    data: { labels, datasets: [{ data, borderColor: '#00c853', borderWidth: 2, pointRadius: 0, tension: .4, fill: true,
+      backgroundColor: (c) => { const g = c.chart.ctx.createLinearGradient(0,0,0,140); g.addColorStop(0,'rgba(0,200,83,.18)'); g.addColorStop(1,'rgba(0,200,83,0)'); return g }
+    }] },
+    options: { ...CHART_OPTIONS, scales: {
+      x: { grid: { color: GRID_STYLE.color }, ticks: { ...TICK_STYLE, maxTicksLimit: 6 } as never },
+      y: { grid: { color: GRID_STYLE.color }, ticks: { ...TICK_STYLE, callback: (v) => `Rs.${(+v/100000).toFixed(1)}L` } as never },
+    }},
+  })
+  return () => chart.destroy()
+}, [])
 }
-
 function HoldingRow({ h, onSell }: { h: Holding; onSell: (sym: string) => void }) {
   const up = h.totalPnl >= 0
   const td = h.todayPnl >= 0
