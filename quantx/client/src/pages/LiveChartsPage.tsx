@@ -5,7 +5,7 @@ import {
   LineElement, BarElement, PointElement,
   LinearScale, CategoryScale, Filler, Tooltip,
 } from 'chart.js'
-import { useOHLCVSeries, useTimeLabels } from '../hooks'
+import { useOHLCVSeries, useTimeLabels } from '../hooks/index'
 import { CHART_OPTIONS, GRID_STYLE, TICK_STYLE, bollingerBands } from '../utils/chart'
 
 ChartJS.register(LineElement, BarElement, PointElement, LinearScale, CategoryScale, Filler, Tooltip)
