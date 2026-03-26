@@ -19,9 +19,9 @@ import {
   useUpdateWatchlistItem,
   useLivePriceStatus,
   useFetchLivePriceStatus,
-} from '../../hooks'
-import { AsyncView } from '../ui'
-import type { WatchlistItem, LiveQuote } from '../../types'
+} from '../hooks'
+import { AsyncView } from '../components/ui'
+import type { WatchlistItem, LiveQuote } from '../types'
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
