@@ -1,10 +1,10 @@
 // ── Portfolio Page ────────────────────────────────────────────────────────────
 import { useEffect, useRef, useState } from 'react'
 import { Chart as ChartJS, LineElement, BarElement, PointElement, LinearScale, CategoryScale, Filler, Tooltip } from 'chart.js'
-import { useStore, useHoldings, useSummary, useTimeLabels, useOHLCVSeries } from '../../hooks'
-import { AsyncView } from '../ui'
-import { fmtINR, CHART_OPTIONS, GRID_STYLE, TICK_STYLE } from '../../utils/chart'
-import type { Holding } from '../../types'
+import { useStore, useHoldings, useSummary, useTimeLabels, useOHLCVSeries } from '../hooks/index'
+import { AsyncView } from '../components/ui/index'
+import { fmtINR, CHART_OPTIONS, GRID_STYLE, TICK_STYLE } from '../utils/chart'
+import type { Holding } from '../types/index'
 
 ChartJS.register(LineElement, BarElement, PointElement, LinearScale, CategoryScale, Filler, Tooltip)
 

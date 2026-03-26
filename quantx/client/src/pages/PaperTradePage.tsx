@@ -1,8 +1,8 @@
 // ── Paper Trade Page ──────────────────────────────────────────────────────────
 import { useEffect, useState } from 'react'
-import { useStore, usePositions, useOrders } from '../../hooks'
-import { AsyncView } from '../ui'
-import { fmtINR } from '../../utils/chart'
+import { useStore, usePositions, useOrders } from '../hooks/index'
+import { AsyncView } from '../components/ui/index'
+import { fmtINR } from '../utils/chart'
 
 const INPUT_STYLE: React.CSSProperties = {
   background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 8,

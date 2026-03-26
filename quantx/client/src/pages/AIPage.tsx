@@ -1,9 +1,9 @@
 // ── AI Prediction Page ────────────────────────────────────────────────────────
 import { useEffect, useRef } from 'react'
 import { Chart as ChartJS, LineElement, PointElement, LinearScale, CategoryScale, Filler, Tooltip, Legend } from 'chart.js'
-import { useStore, useAIPrediction, useOptionChain, useOHLCVSeries, useTimeLabels } from '../../hooks'
-import { AsyncView } from '../ui'
-import { CHART_OPTIONS, GRID_STYLE, TICK_STYLE } from '../../utils/chart'
+import { useStore, useAIPrediction, useOptionChain, useOHLCVSeries, useTimeLabels } from '../hooks/index'
+import { AsyncView } from '../components/ui/index'
+import { CHART_OPTIONS, GRID_STYLE, TICK_STYLE } from '../utils/chart'
 
 ChartJS.register(LineElement, PointElement, LinearScale, CategoryScale, Filler, Tooltip, Legend)
 
